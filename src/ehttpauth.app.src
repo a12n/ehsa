@@ -1,0 +1,7 @@
+%% -*- mode: erlang -*-
+
+{application, ehttpauth,
+ [{description, "HTTP authentication handling server"},
+  {vsn, hg},
+  {modules, []},
+  {applications, [kernel, stdlib]}]}.
