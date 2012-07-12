@@ -8,7 +8,7 @@
 -module(ehsa).
 
 %% Types
--export_type([body/0, body_fun/0, credentials/0]).
+-export_type([body/0, body_fun/0, credentials/0, credentials_fun/0]).
 
 %% API
 -export([]).
@@ -19,9 +19,11 @@
 
 -type body() :: binary() | iolist() | body_fun().
 
--type body_fun() :: fun(() -> {binary() | iolist(), done | fun()}).
+-type body_fun() :: fun(() -> {binary() | iolist(), done | body_fun()}).
 
 -type credentials() :: {binary(), binary()}.
+
+-type credentials_fun() :: fun(() -> {credentials(), done | credentials_fun()}).
 
 %%%===================================================================
 %%% API
@@ -29,7 +31,6 @@
 
 %%--------------------------------------------------------------------
 %% @doc
-%% @spec
 %% @end
 %%--------------------------------------------------------------------
 
