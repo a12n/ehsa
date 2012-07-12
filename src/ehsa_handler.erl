@@ -7,27 +7,44 @@
 %%%-------------------------------------------------------------------
 -module(ehsa_handler).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
+-callback auth_scheme() ->
+    Scheme :: binary().
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
 -callback init_auth(Props :: [{atom(), term()}]) ->
     State :: term().
 
--callback supports_auth_scheme(Scheme :: binary()) ->
-    boolean().
-
+%%--------------------------------------------------------------------
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
 -callback verify_auth(Method :: binary(),
                       URI :: binary(),
-                      Req_Header :: binary(),
-                      Credentials :: [{binary(), binary()}],
+                      Req_Info :: binary(),
+                      Credentials :: [ehsa:credentials()],
                       State :: term()) ->
-    {true, Res_Header :: binary(), Authorized :: {binary(), binary()},
+    {true, Res_Info :: binary() | iolist(), Authorized :: ehsa:credentials(),
      Next_State :: term()} |
-    {false, Res_Header :: binary(), Next_State :: term()}.
+    {false, Res_Info :: binary() | iolist(), Next_State :: term()}.
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Body integrity protection.
+%% @end
+%%--------------------------------------------------------------------
 -callback verify_auth(Method :: binary(),
                       URI :: binary(),
-                      Req_Header :: binary(),
-                      Req_Body :: binary() | iolist(),
-                      Credentials :: [{binary(), binary()}],
+                      Req_Info :: binary(),
+                      Req_Body :: ehsa:body(),
+                      Credentials :: [ehsa:credentials()],
                       State :: term()) ->
-    {true, fun(Res_Body :: binary() -> Res_Header :: binary()),
-              Authorized :: {binary(), binary()}, Next_State :: term()} |
-    {false, Res_Header :: binary(), Next_State :: term()}.
+    {true, fun((Res_Body :: ehsa:body()) -> Res_Info :: binary() | iolist()),
+              Authorized :: ehsa:credentials(), Next_State :: term()} |
+    {false, Res_Info :: binary() | iolist(), Next_State :: term()}.
