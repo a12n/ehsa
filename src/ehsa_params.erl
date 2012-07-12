@@ -52,7 +52,52 @@ format(Key, Value) ->
 %%--------------------------------------------------------------------
 -spec parse(binary()) -> [{atom(), binary()}].
 parse(_Str) ->
-    %% TODO
+    %% 1.2 Access Authentication Framework
+    %% realm       = "realm" "=" realm-value
+    %% realm-value = quoted-string
+
+    %% 3.2.1 The WWW-Authenticate Response Header
+    %% challenge        =  "Digest" digest-challenge
+    %%
+    %% digest-challenge  = 1#( realm | [ domain ] | nonce |
+    %%                     [ opaque ] |[ stale ] | [ algorithm ] |
+    %%                     [ qop-options ] | [auth-param] )
+    %%
+    %%
+    %% domain            = "domain" "=" <"> URI ( 1*SP URI ) <">
+    %% URI               = absoluteURI | abs_path
+    %% nonce             = "nonce" "=" nonce-value
+    %% nonce-value       = quoted-string
+    %% opaque            = "opaque" "=" quoted-string
+    %% stale             = "stale" "=" ( "true" | "false" )
+    %% algorithm         = "algorithm" "=" ( "MD5" | "MD5-sess" |
+    %%                      token )
+    %% qop-options       = "qop" "=" <"> 1#qop-value <">
+    %% qop-value         = "auth" | "auth-int" | token
+
+    %% 3.2.2 The Authorization Request Header
+    %% credentials      = "Digest" digest-response
+    %% digest-response  = 1#( username | realm | nonce | digest-uri
+    %%                 | response | [ algorithm ] | [cnonce] |
+    %%                 [opaque] | [message-qop] |
+    %%                     [nonce-count]  | [auth-param] )
+    %%
+    %% username         = "username" "=" username-value
+    %% username-value   = quoted-string
+    %% digest-uri       = "uri" "=" digest-uri-value
+    %% digest-uri-value = request-uri   ; As specified by HTTP/1.1
+    %% message-qop      = "qop" "=" qop-value
+    %% cnonce           = "cnonce" "=" cnonce-value
+    %% cnonce-value     = nonce-value
+    %% nonce-count      = "nc" "=" nc-value
+    %% nc-value         = 8LHEX
+    %% response         = "response" "=" request-digest
+    %% request-digest = <"> 32LHEX <">
+    %% LHEX             =  "0" | "1" | "2" | "3" |
+    %%                     "4" | "5" | "6" | "7" |
+    %%                     "8" | "9" | "a" | "b" |
+    %%                     "c" | "d" | "e" | "f"
+
     [].
 
 %%%===================================================================
