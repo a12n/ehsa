@@ -19,7 +19,7 @@
 
 -type body() :: binary() | iolist() | body_fun().
 
--type body_fun() :: fun(() -> {binary(), done | fun()}).
+-type body_fun() :: fun(() -> {binary() | iolist(), done | fun()}).
 
 -type credentials() :: {binary(), binary()}.
 
