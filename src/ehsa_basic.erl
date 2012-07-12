@@ -43,9 +43,9 @@ init_auth(Props) ->
                   term()) ->
                          {true, binary() | iolist(), ehsa:credentials(), term()} |
                          {false, binary() | iolist(), term()}.
-verify_auth(_Method, _URI, Req_Info, All_Creds, Realm) ->
+verify_auth(_Method, _URI, Req_Info, All_Creds, State = Realm) ->
     Authorized =
-        case binary:split(base64:decode(Req_Info), [<<$:>>]) of
+        case binary:split(base64:decode(Req_Info), <<$:>>) of
             [Usr, Pwd] ->
                 Creds = {Usr, Pwd},
                 case lists:member(Creds, All_Creds) of
@@ -59,9 +59,9 @@ verify_auth(_Method, _URI, Req_Info, All_Creds, Realm) ->
         end,
     case Authorized of
         {_Usr, _Pwd} ->
-            {true, <<>>, Authorized, Realm};
+            {true, <<>>, Authorized, State};
         undefined ->
-            {false, ehsa_params:format(realm, Realm), Realm}
+            {false, ehsa_params:format(realm, Realm), State}
     end.
 
 %%--------------------------------------------------------------------
@@ -77,10 +77,10 @@ verify_auth(_Method, _URI, Req_Info, All_Creds, Realm) ->
                          {true, fun((ehsa:body()) -> binary() | iolist()),
                           ehsa:credentials(), term()} |
                          {false, binary() | iolist(), term()}.
-verify_auth(Method, URI, Req_Info, _Req_Body, All_Creds, Realm) ->
-    case verify_auth(Method, URI, Req_Info, All_Creds, Realm) of
-        {true, Res_Info, Authorized, _Realm} ->
-            {true, fun(_Res_Body) -> Res_Info end, Authorized, Realm};
+verify_auth(Method, URI, Req_Info, _Req_Body, All_Creds, State) ->
+    case verify_auth(Method, URI, Req_Info, All_Creds, State) of
+        {true, Res_Info, Authorized, Next_State} ->
+            {true, fun(_Res_Body) -> Res_Info end, Authorized, Next_State};
         Other ->
             Other
     end.
