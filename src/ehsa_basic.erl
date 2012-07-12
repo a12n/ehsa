@@ -45,7 +45,6 @@ init_auth(Props) ->
                          {false, binary() | iolist(), term()}.
 verify_auth(_Method, _URI, Req_Info, All_Creds, Realm) ->
     Authorized =
-        %% FIXME: Pwd is allowed to contain $:.
         case binary:split(base64:decode(Req_Info), [<<$:>>]) of
             [Usr, Pwd] ->
                 Creds = {Usr, Pwd},
