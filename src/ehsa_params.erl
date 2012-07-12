@@ -54,3 +54,26 @@ format(Key, Value) ->
 parse(_Str) ->
     %% TODO
     [].
+
+%%%===================================================================
+%%% Tests
+%%%===================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+
+-ifdef(TEST).
+
+format_1_test() ->
+    <<>> = iolist_to_binary(format([])),
+    <<"realm=\"XYZ\"">> = iolist_to_binary(format([{realm, <<"XYZ">>}])),
+    <<"qop=\"\"">> = iolist_to_binary(format([{qop, <<>>}])),
+    <<"method=MD5, username=\"xyz\"">> =
+        iolist_to_binary(format([{method, <<"MD5">>},
+                                 {username, <<"xyz">>}])).
+
+format_2_test() ->
+    <<"realm=\"Test\"">> = iolist_to_binary(format(realm, <<"Test">>)),
+    <<"qop=\"\"">> = iolist_to_binary(format(qop, <<>>)),
+    <<"method=MD5">> = iolist_to_binary(format(method, <<"MD5">>)).
+
+-endif.
