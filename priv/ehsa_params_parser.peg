@@ -1,0 +1,100 @@
+%% Parameter names should be case-insensitive. Parameters not needed
+%% on the server side are commented.
+
+auth_params <- sp? auth_param (lws? ',' lws? auth_param)* ws?
+`[lists:nth(2, Node) | [lists:nth(4, Item) || Item <- lists:nth(3, Node)]]` ;
+
+
+%% auth_param <- realm / domain / nonce / opaque / stale / algorithm /
+%%                qop_options / username / digest_uri / message_qop /
+%%                cnonce / nonce_count / response / gen_auth_param ~ ;
+auth_param <- realm / nonce / opaque / algorithm /
+               username / digest_uri / message_qop /
+               cnonce / nonce_count / response / gen_auth_param ~ ;
+
+
+realm <- "realm" '=' quoted_string
+`{realm, lists:nth(3, Node)}` ;
+
+%% domain <- "domain" '=' '"' request_uri (sp+ request_uri)* '"'
+%% `{domain, [lists:nth(4, Node) | [lists:nth(2, Item) || Item <- lists:nth(5, Node)]]}` ;
+
+nonce <- "nonce" '=' quoted_string
+`{nonce, lists:nth(3, Node)}` ;
+
+opaque <- "opaque" '=' quoted_string
+`{opaque, lists:nth(3, Node)}` ;
+
+%% stale <- "stale" '=' ("true" / "false")
+%% `{stale, binary_to_existing_atom(ehsa_binary:to_lower(lists:nth(3, Node)), latin1)}` ;
+
+algorithm <- "algorithm" '=' (algorithm_value / token)
+`{algorithm, lists:nth(3, Node)}` ;
+
+algorithm_value <- "MD5-sess" / "MD5"
+`case iolist_to_binary(Node) of
+     <<"MD5-sess">> -> md5_sess;
+     <<"MD5">>      -> md5
+ end` ;
+
+%% qop_options <- "qop" '=' '"' (qop_value / token) (lws? ',' lws? (qop_value / token)) '"'
+%% `{qop, [lists:nth(4, Node) | [lists:nth(4, I) || I <- lists:nth(5, Node)]]}` ;
+
+qop_value <- "auth-int" / "auth"
+`case iolist_to_binary(Node) of
+     <<"auth-int">> -> auth_int;
+     <<"auth">>     -> auth
+ end` ;
+
+username <- "username" '=' quoted_string
+`{username, lists:nth(3, Node)}` ;
+
+digest_uri <- "uri" '=' request_uri
+`{uri, lists:nth(3, Node)}` ;
+
+message_qop <- "qop" '=' (qop_value / token)
+`{qop, lists:nth(3, Node)}` ;
+
+cnonce <- "cnonce" '=' quoted_string
+`{cnonce, lists:nth(3, Node)}` ;
+
+nonce_count <- "nc" '=' nc_value
+`{nc, lists:nth(3, Node)}` ;
+
+nc_value <- hex hex hex hex hex hex hex hex
+`list_to_integer(binary_to_list(iolist_to_binary(Node)), 16)` ;
+
+response <- "response" '=' '"' response_digest '"'
+`{response, lists:nth(4, Node)}` ;
+
+response_digest <- hex hex hex hex hex hex hex hex
+                hex hex hex hex hex hex hex hex
+                hex hex hex hex hex hex hex hex
+                hex hex hex hex hex hex hex hex
+`iolist_to_binary(Node)` ;
+
+hex <- [0-9A-Fa-f] ~ ;
+
+gen_auth_param <- token '=' (token / quoted_string)
+`{lists:nth(1, Node), lists:nth(3, Node)}` ;
+
+
+token <- [-!#$%&´*+0-9A-Z^_`a-z|~]+
+`iolist_to_binary(Node)` ;
+
+quoted_string <- '"' (!'"' ("\\\\" / '\\"' / .))* '"'
+`iolist_to_binary(lists:nth(2, Node))` ;
+
+
+% Yeah, it's that clumsy.
+request_uri <- [-#%&*+0-9A-Z_a-z~:/?]+
+`iolist_to_binary(Node)` ;
+
+
+sp <- ' ' ~ ;
+
+ws <- [ \t]+ ~ ;
+
+crlf <- "\r\n" ~ ;
+
+lws <- crlf? (' ' / '\t')+ ~ ;
