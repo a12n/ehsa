@@ -49,8 +49,8 @@ qop_value <- "auth-int" / "auth"
 username <- "username" '=' quoted_string
 `{username, lists:nth(3, Node)}` ;
 
-digest_uri <- "uri" '=' request_uri
-`{uri, lists:nth(3, Node)}` ;
+digest_uri <- "uri" '=' '"' request_uri '"'
+`{uri, lists:nth(4, Node)}` ;
 
 message_qop <- "qop" '=' (qop_value / token)
 `{qop, lists:nth(3, Node)}` ;
