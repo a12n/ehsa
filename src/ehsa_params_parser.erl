@@ -88,7 +88,7 @@ parse(Input) when is_binary(Input) ->
   p(Input, Index, 'request_uri', fun(I,D) -> (p_one_or_more(p_charclass(<<"[-#%&*+0-9A-Z_a-z~:\/?]">>)))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
 
 'sp'(Input, Index) ->
-  p(Input, Index, 'sp', fun(I,D) -> (p_string(<<"\s">>))(I,D) end, fun(Node, Idx) -> Node end).
+  p(Input, Index, 'sp', fun(I,D) -> (p_one_or_more(p_string(<<"\s">>)))(I,D) end, fun(Node, Idx) -> Node end).
 
 'ws'(Input, Index) ->
   p(Input, Index, 'ws', fun(I,D) -> (p_one_or_more(p_charclass(<<"[\s\t]">>)))(I,D) end, fun(Node, Idx) -> Node end).

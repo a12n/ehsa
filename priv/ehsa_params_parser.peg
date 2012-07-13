@@ -16,7 +16,7 @@ auth_param <- realm / nonce / opaque / algorithm /
 realm <- "realm" '=' quoted_string
 `{realm, lists:nth(3, Node)}` ;
 
-%% domain <- "domain" '=' '"' request_uri (sp+ request_uri)* '"'
+%% domain <- "domain" '=' '"' request_uri (sp request_uri)* '"'
 %% `{domain, [lists:nth(4, Node) | [lists:nth(2, Item) || Item <- lists:nth(5, Node)]]}` ;
 
 nonce <- "nonce" '=' quoted_string
@@ -91,7 +91,7 @@ request_uri <- [-#%&*+0-9A-Z_a-z~:/?]+
 `iolist_to_binary(Node)` ;
 
 
-sp <- ' ' ~ ;
+sp <- ' '+ ~ ;
 
 ws <- [ \t]+ ~ ;
 
