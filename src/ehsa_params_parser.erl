@@ -67,7 +67,7 @@ parse(Input) when is_binary(Input) ->
   p(Input, Index, 'nc_value', fun(I,D) -> (p_seq([fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2]))(I,D) end, fun(Node, Idx) -> list_to_integer(binary_to_list(iolist_to_binary(Node)), 16) end).
 
 'response'(Input, Index) ->
-  p(Input, Index, 'response', fun(I,D) -> (p_seq([p_string(<<"response">>), p_string(<<"=">>), p_string(<<"\"">>), fun 'response_digest'/2, p_string(<<"\"">>)]))(I,D) end, fun(Node, Idx) -> {response, lists:nth(4, Node)} end).
+  p(Input, Index, 'response', fun(I,D) -> (p_seq([p_string(<<"response">>), p_string(<<"=">>), p_string(<<"\"">>), fun 'response_digest'/2, p_string(<<"\"">>)]))(I,D) end, fun(Node, Idx) -> {response, ehsa_binary:to_lower(lists:nth(4, Node))} end).
 
 'response_digest'(Input, Index) ->
   p(Input, Index, 'response_digest', fun(I,D) -> (p_seq([fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2]))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
