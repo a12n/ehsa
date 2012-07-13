@@ -65,7 +65,7 @@ nc_value <- hex hex hex hex hex hex hex hex
 `list_to_integer(binary_to_list(iolist_to_binary(Node)), 16)` ;
 
 response <- "response" '=' '"' response_digest '"'
-`{response, lists:nth(4, Node)}` ;
+`{response, ehsa_binary:to_lower(lists:nth(4, Node))}` ;
 
 response_digest <- hex hex hex hex hex hex hex hex
                 hex hex hex hex hex hex hex hex
