@@ -79,7 +79,12 @@ format_2_test_() ->
 parse_1_test_() ->
     [ ?_test( [{realm, <<"xyz^12:/">>},
                {algorithm, md5},
-               {qop, auth_int}] = parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t">>) ),
+               {qop, auth_int},
+               {nc, 31}] = parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>) ),
+      ?_test( [{algorithm, md5_sess},
+               {qop, auth},
+               {response, <<"0123456789abcDef0123456789AbCdEf">>},
+               {uri, <<"/a/b/c">>}] = parse(<<" algorithm=MD5-sess, qop=auth, response=\"0123456789abcDef0123456789AbCdEf\", uri=\"/a/b/c\"">>) ),
       ?_test( [{<<"a">>, <<"1">>},
                {<<"b">>, <<"c">>},
                {<<"d">>, <<"e">>}] = parse(<<"a=1\t,\tb=\"c\"\t,\td=e">>) ),
