@@ -18,7 +18,7 @@
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec format([{atom(), binary()}]) -> binary() | iolist().
+-spec format([{atom(), binary() | iolist()}]) -> binary() | iolist().
 format([]) ->
     [];
 format([{Key, Value}]) ->
@@ -31,7 +31,7 @@ format([{Key, Value} | Other]) ->
 %% Some auth parameter values must be quoted.
 %% @end
 %%--------------------------------------------------------------------
--spec format(atom(), binary()) -> binary() | iolist().
+-spec format(atom(), binary() | iolist()) -> binary() | iolist().
 format(Key, Value)
   when Key =:= cnonce;
        Key =:= domain;
@@ -51,54 +51,8 @@ format(Key, Value) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec parse(binary()) -> [{atom(), binary()}].
-parse(_Str) ->
-    %% 1.2 Access Authentication Framework
-    %% realm       = "realm" "=" realm-value
-    %% realm-value = quoted-string
-
-    %% 3.2.1 The WWW-Authenticate Response Header
-    %% challenge        =  "Digest" digest-challenge
-    %%
-    %% digest-challenge  = 1#( realm | [ domain ] | nonce |
-    %%                     [ opaque ] |[ stale ] | [ algorithm ] |
-    %%                     [ qop-options ] | [auth-param] )
-    %%
-    %%
-    %% domain            = "domain" "=" <"> URI ( 1*SP URI ) <">
-    %% URI               = absoluteURI | abs_path
-    %% nonce             = "nonce" "=" nonce-value
-    %% nonce-value       = quoted-string
-    %% opaque            = "opaque" "=" quoted-string
-    %% stale             = "stale" "=" ( "true" | "false" )
-    %% algorithm         = "algorithm" "=" ( "MD5" | "MD5-sess" |
-    %%                      token )
-    %% qop-options       = "qop" "=" <"> 1#qop-value <">
-    %% qop-value         = "auth" | "auth-int" | token
-
-    %% 3.2.2 The Authorization Request Header
-    %% credentials      = "Digest" digest-response
-    %% digest-response  = 1#( username | realm | nonce | digest-uri
-    %%                 | response | [ algorithm ] | [cnonce] |
-    %%                 [opaque] | [message-qop] |
-    %%                     [nonce-count]  | [auth-param] )
-    %%
-    %% username         = "username" "=" username-value
-    %% username-value   = quoted-string
-    %% digest-uri       = "uri" "=" digest-uri-value
-    %% digest-uri-value = request-uri   ; As specified by HTTP/1.1
-    %% message-qop      = "qop" "=" qop-value
-    %% cnonce           = "cnonce" "=" cnonce-value
-    %% cnonce-value     = nonce-value
-    %% nonce-count      = "nc" "=" nc-value
-    %% nc-value         = 8LHEX
-    %% response         = "response" "=" request-digest
-    %% request-digest = <"> 32LHEX <">
-    %% LHEX             =  "0" | "1" | "2" | "3" |
-    %%                     "4" | "5" | "6" | "7" |
-    %%                     "8" | "9" | "a" | "b" |
-    %%                     "c" | "d" | "e" | "f"
-
-    [].
+parse(Str) ->
+    [_ | _] = ehsa_params_parser:parse(Str).
 
 %%%===================================================================
 %%% Tests
@@ -108,17 +62,30 @@ parse(_Str) ->
 
 -ifdef(TEST).
 
-format_1_test() ->
-    <<>> = iolist_to_binary(format([])),
-    <<"realm=\"XYZ\"">> = iolist_to_binary(format([{realm, <<"XYZ">>}])),
-    <<"qop=\"\"">> = iolist_to_binary(format([{qop, <<>>}])),
-    <<"method=MD5, username=\"xyz\"">> =
-        iolist_to_binary(format([{method, <<"MD5">>},
-                                 {username, <<"xyz">>}])).
+format_1_test_() ->
+    [ ?_test( <<>> = iolist_to_binary(format([])) ),
+      ?_test( <<"realm=\"XYZ\"">> = iolist_to_binary(format([{realm, <<"XYZ">>}])) ),
+      ?_test( <<"qop=\"\"">> = iolist_to_binary(format([{qop, <<>>}])) ),
+      ?_test( <<"method=MD5, username=\"xyz\"">> =
+                  iolist_to_binary(format([{method, <<"MD5">>},
+                                           {username, <<"xyz">>}])) ) ].
 
-format_2_test() ->
-    <<"realm=\"Test\"">> = iolist_to_binary(format(realm, <<"Test">>)),
-    <<"qop=\"\"">> = iolist_to_binary(format(qop, <<>>)),
-    <<"method=MD5">> = iolist_to_binary(format(method, <<"MD5">>)).
+format_2_test_() ->
+    [ ?_test( <<"realm=\"Test\"">> = iolist_to_binary(format(realm, <<"Test">>)) ),
+      ?_test( <<"qop=\"\"">> = iolist_to_binary(format(qop, <<>>)) ),
+      ?_test( <<"method=MD5">> = iolist_to_binary(format(method, <<"MD5">>)) ) ].
+
+%% TODO: More tests.
+parse_1_test_() ->
+    [ ?_test( [{realm, <<"xyz^12:/">>},
+               {algorithm, md5},
+               {qop, auth_int}] = parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t">>) ),
+      ?_test( [{<<"a">>, <<"1">>},
+               {<<"b">>, <<"c">>},
+               {<<"d">>, <<"e">>}] = parse(<<"a=1\t,\tb=\"c\"\t,\td=e">>) ),
+      ?_assertException(error, {badmatch, _}, parse(<<" realm ">>)),
+      ?_assertException(error, {badmatch, _}, parse(<<" xyz= ">>)),
+      ?_assertException(error, {badmatch, _}, parse(<<", realm=\"Foo\"">>)),
+      ?_assertException(error, {badmatch, _}, parse(<<"realm=\"Foo\", ">>)) ].
 
 -endif.
