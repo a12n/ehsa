@@ -18,32 +18,16 @@
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--callback init_auth(Props :: [{atom(), term()}]) ->
-    State :: term().
+-callback init(Args :: [{atom(), term()}]) ->
+    {ok, State :: term()} | {stop, Reason :: term()}.
 
 %%--------------------------------------------------------------------
 %% @doc
 %% Constructs "Unathorized" response auth parameters. Returns `false'
-%% for compatibility with verify_auth functions.
+%% for consistency with verify_auth function.
 %% @end
 %%--------------------------------------------------------------------
--callback unauthorized_info(Method :: binary(),
-                            URI :: binary(),
-                            State :: term()) ->
-    {false, Res_Info :: binary() | iolist(), Next_State :: term()}.
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Check authentication parameters.
-%% @end
-%%--------------------------------------------------------------------
--callback verify_auth(Method :: binary(),
-                      URI :: binary(),
-                      Req_Info :: binary(),
-                      Credentials :: [ehsa:credentials()],
-                      State :: term()) ->
-    {true, Res_Info :: binary() | iolist() | undefined,
-     Authorized :: ehsa:credentials(), Next_State :: term()} |
+-callback unauthorized_info(State :: term()) ->
     {false, Res_Info :: binary() | iolist(), Next_State :: term()}.
 
 %%--------------------------------------------------------------------
@@ -51,12 +35,11 @@
 %% Check authentication parameters and body integrity.
 %% @end
 %%--------------------------------------------------------------------
--callback verify_auth_int(Method :: binary(),
-                          URI :: binary(),
-                          Req_Info :: binary(),
-                          Req_Body :: ehsa:body(),
-                          Credentials :: [ehsa:credentials()],
-                          State :: term()) ->
-    {true, fun((Res_Body :: ehsa:body()) -> Res_Info :: binary() | iolist() | undefined),
-              Authorized :: ehsa:credentials(), Next_State :: term()} |
+-callback verify_auth(Method :: binary(),
+                      Req_Info :: binary(),
+                      Req_Body :: ehsa:body(),
+                      Credentials :: ehsa:credentials_fun(),
+                      State :: term()) ->
+    {true, Res_Info :: binary() | iolist() | undefined,
+     Authorized :: ehsa:credentials(), Next_State :: term()} |
     {false, Res_Info :: binary() | iolist(), Next_State :: term()}.
