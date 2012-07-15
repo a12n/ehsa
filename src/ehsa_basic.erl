@@ -56,7 +56,7 @@ unauthorized_info(State = Realm) ->
 verify_auth(_Method, Req_Info, _Req_Body, Pwd_Fun, State) ->
     [Usr, Pwd] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Usr) of
-        Pwd ->
+        {ok, Pwd} ->
             {true, undefined, {Usr, Pwd}, State};
         _Other ->
             unauthorized_info(State)
@@ -85,9 +85,9 @@ unauthorized_info_1_test_() ->
       end ].
 
 verify_auth_5_test_() ->
-    Pwd_Fun = fun(<<"admin">>) -> <<"123">>;
-                 (<<"guest">>) -> <<>>;
-                 (<<"xyzzy">>) -> <<"1,.:235asd\/">>;
+    Pwd_Fun = fun(<<"admin">>) -> {ok, <<"123">>};
+                 (<<"guest">>) -> {ok, <<>>};
+                 (<<"xyzzy">>) -> {ok, <<"1,.:235asd\/">>};
                  (_Other) -> undefined
               end,
     Body = <<>>,

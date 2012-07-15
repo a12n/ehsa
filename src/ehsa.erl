@@ -49,7 +49,7 @@
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--type password_fun() :: fun((binary()) -> binary() | undefined).
+-type password_fun() :: fun((binary()) -> {ok, binary()} | undefined).
 
 %%%===================================================================
 %%% API
