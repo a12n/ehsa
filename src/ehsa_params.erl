@@ -66,24 +66,24 @@ format_1_test_() ->
     [ ?_test( <<>> = iolist_to_binary(format([])) ),
       ?_test( <<"realm=\"XYZ\"">> = iolist_to_binary(format([{realm, <<"XYZ">>}])) ),
       ?_test( <<"qop=\"\"">> = iolist_to_binary(format([{qop, <<>>}])) ),
-      ?_test( <<"method=MD5, username=\"xyz\"">> =
-                  iolist_to_binary(format([{method, <<"MD5">>},
+      ?_test( <<"algorithm=MD5, username=\"xyz\"">> =
+                  iolist_to_binary(format([{algorithm, <<"MD5">>},
                                            {username, <<"xyz">>}])) ) ].
 
 format_2_test_() ->
     [ ?_test( <<"realm=\"Test\"">> = iolist_to_binary(format(realm, <<"Test">>)) ),
       ?_test( <<"qop=\"\"">> = iolist_to_binary(format(qop, <<>>)) ),
-      ?_test( <<"method=MD5">> = iolist_to_binary(format(method, <<"MD5">>)) ) ].
+      ?_test( <<"algorithm=MD5">> = iolist_to_binary(format(algorithm, <<"MD5">>)) ) ].
 
 %% TODO: More tests.
 parse_1_test_() ->
     [ ?_test( [{realm, <<"xyz^12:/">>},
-               {algorithm, md5},
-               {qop, auth_int},
-               {nc, 31}] = parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>) ),
-      ?_test( [{algorithm, md5_sess},
-               {qop, auth},
-               {response, <<"0123456789abcdef0123456789abcdef">>},
+               {algorithm, <<"MD5">>},
+               {qop, <<"auth-int">>},
+               {nc, <<"0000001f">>}] = parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>) ),
+      ?_test( [{algorithm, <<"MD5-sess">>},
+               {qop, <<"auth">>},
+               {response, <<"0123456789abcDef0123456789AbCdEf">>},
                {uri, <<"/a/b/c">>}] = parse(<<" algorithm=MD5-sess, qop=auth, response=\"0123456789abcDef0123456789AbCdEf\", uri=\"/a/b/c\"">>) ),
       ?_test( [{<<"a">>, <<"1">>},
                {<<"b">>, <<"c">>},

@@ -32,19 +32,21 @@ algorithm <- "algorithm" '=' (algorithm_value / token)
 `{algorithm, lists:nth(3, Node)}` ;
 
 algorithm_value <- "MD5-sess" / "MD5"
-`case iolist_to_binary(Node) of
-     <<"MD5-sess">> -> md5_sess;
-     <<"MD5">>      -> md5
- end` ;
+%% `case iolist_to_binary(Node) of
+%%      <<"MD5-sess">> -> md5_sess;
+%%      <<"MD5">>      -> md5
+%%  end` ;
+`iolist_to_binary(Node)` ;
 
 %% qop_options <- "qop" '=' '"' (qop_value / token) (lws? ',' lws? (qop_value / token)) '"'
 %% `{qop, [lists:nth(4, Node) | [lists:nth(4, I) || I <- lists:nth(5, Node)]]}` ;
 
 qop_value <- "auth-int" / "auth"
-`case iolist_to_binary(Node) of
-     <<"auth-int">> -> auth_int;
-     <<"auth">>     -> auth
- end` ;
+%% `case iolist_to_binary(Node) of
+%%      <<"auth-int">> -> auth_int;
+%%      <<"auth">>     -> auth
+%%  end` ;
+`iolist_to_binary(Node)` ;
 
 username <- "username" '=' quoted_string
 `{username, lists:nth(3, Node)}` ;
@@ -62,10 +64,11 @@ nonce_count <- "nc" '=' nc_value
 `{nc, lists:nth(3, Node)}` ;
 
 nc_value <- hex hex hex hex hex hex hex hex
-`list_to_integer(binary_to_list(iolist_to_binary(Node)), 16)` ;
+%% `ehsa_binary:to_integer(iolist_to_binary(Node), 16)` ;
+`iolist_to_binary(Node)` ;
 
 response <- "response" '=' '"' response_digest '"'
-`{response, ehsa_binary:to_lower(lists:nth(4, Node))}` ;
+`{response, lists:nth(4, Node)}` ;
 
 response_digest <- hex hex hex hex hex hex hex hex
                 hex hex hex hex hex hex hex hex

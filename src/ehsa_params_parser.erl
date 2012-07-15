@@ -37,16 +37,10 @@ parse(Input) when is_binary(Input) ->
   p(Input, Index, 'algorithm', fun(I,D) -> (p_seq([p_string(<<"algorithm">>), p_string(<<"=">>), p_choose([fun 'algorithm_value'/2, fun 'token'/2])]))(I,D) end, fun(Node, Idx) -> {algorithm, lists:nth(3, Node)} end).
 
 'algorithm_value'(Input, Index) ->
-  p(Input, Index, 'algorithm_value', fun(I,D) -> (p_choose([p_string(<<"MD5-sess">>), p_string(<<"MD5">>)]))(I,D) end, fun(Node, Idx) -> case iolist_to_binary(Node) of
-     <<"MD5-sess">> -> md5_sess;
-     <<"MD5">>      -> md5
- end end).
+  p(Input, Index, 'algorithm_value', fun(I,D) -> (p_choose([p_string(<<"MD5-sess">>), p_string(<<"MD5">>)]))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
 
 'qop_value'(Input, Index) ->
-  p(Input, Index, 'qop_value', fun(I,D) -> (p_choose([p_string(<<"auth-int">>), p_string(<<"auth">>)]))(I,D) end, fun(Node, Idx) -> case iolist_to_binary(Node) of
-     <<"auth-int">> -> auth_int;
-     <<"auth">>     -> auth
- end end).
+  p(Input, Index, 'qop_value', fun(I,D) -> (p_choose([p_string(<<"auth-int">>), p_string(<<"auth">>)]))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
 
 'username'(Input, Index) ->
   p(Input, Index, 'username', fun(I,D) -> (p_seq([p_string(<<"username">>), p_string(<<"=">>), fun 'quoted_string'/2]))(I,D) end, fun(Node, Idx) -> {username, lists:nth(3, Node)} end).
@@ -64,10 +58,10 @@ parse(Input) when is_binary(Input) ->
   p(Input, Index, 'nonce_count', fun(I,D) -> (p_seq([p_string(<<"nc">>), p_string(<<"=">>), fun 'nc_value'/2]))(I,D) end, fun(Node, Idx) -> {nc, lists:nth(3, Node)} end).
 
 'nc_value'(Input, Index) ->
-  p(Input, Index, 'nc_value', fun(I,D) -> (p_seq([fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2]))(I,D) end, fun(Node, Idx) -> list_to_integer(binary_to_list(iolist_to_binary(Node)), 16) end).
+  p(Input, Index, 'nc_value', fun(I,D) -> (p_seq([fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2]))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
 
 'response'(Input, Index) ->
-  p(Input, Index, 'response', fun(I,D) -> (p_seq([p_string(<<"response">>), p_string(<<"=">>), p_string(<<"\"">>), fun 'response_digest'/2, p_string(<<"\"">>)]))(I,D) end, fun(Node, Idx) -> {response, ehsa_binary:to_lower(lists:nth(4, Node))} end).
+  p(Input, Index, 'response', fun(I,D) -> (p_seq([p_string(<<"response">>), p_string(<<"=">>), p_string(<<"\"">>), fun 'response_digest'/2, p_string(<<"\"">>)]))(I,D) end, fun(Node, Idx) -> {response, lists:nth(4, Node)} end).
 
 'response_digest'(Input, Index) ->
   p(Input, Index, 'response_digest', fun(I,D) -> (p_seq([fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2, fun 'hex'/2]))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
