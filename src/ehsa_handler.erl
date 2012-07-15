@@ -38,7 +38,7 @@
 -callback verify_auth(Method :: binary(),
                       Req_Info :: binary(),
                       Req_Body :: ehsa:body(),
-                      Credentials :: ehsa:credentials_fun(),
+                      Pwd_Fun :: ehsa:password_fun(),
                       State :: term()) ->
     {true, Res_Info :: binary() | iolist() | undefined,
      Authorized :: ehsa:credentials(), Next_State :: term()} |
