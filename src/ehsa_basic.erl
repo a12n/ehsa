@@ -48,7 +48,7 @@ unauthorized_info(State = Realm) ->
 -spec verify_auth(binary(),
                   binary(),
                   ehsa:body(),
-                  ehsa:credentials_fun(),
+                  ehsa:password_fun(),
                   term()) ->
                          {true, binary() | iolist() | undefined,
                           ehsa:credentials(), term()} |
