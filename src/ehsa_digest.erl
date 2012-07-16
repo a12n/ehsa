@@ -31,9 +31,13 @@ auth_scheme() ->
 %%--------------------------------------------------------------------
 -spec init([{atom(), term()}]) -> term().
 init(Args) ->
-    NC = dict:new(),
+    Domain = proplists:get_value(domain, Args, []),
+    QOP = <<"auth, auth-int">>,
     Realm = proplists:get_value(realm, Args, <<>>),
-    {ok, {NC, Realm}}.
+    Res_Info = ehsa_params:format([ {realm, Realm},
+                                    {qop, QOP},
+                                    {domain, ehsa_binary:join(Domain, <<" ">>)} ]),
+    {ok, Res_Info}.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -41,10 +45,12 @@ init(Args) ->
 %%--------------------------------------------------------------------
 -spec unauthorized_info(term()) ->
                                {false, binary() | iolist(), term()}.
-unauthorized_info(State = {_NC, Realm}) ->
-    {false, ehsa_params:format([ {realm, Realm},
-                                 {qop, <<"auth, auth-int">>},
-                                 {nonce, make_nonce()} ]), State}.
+unauthorized_info(State = Res_Info) ->
+    Nonce = make_nonce(),
+    %% ehsa_nc:insert(Nonce),
+    {false, [ Res_Info,
+              <<", ">>,
+              ehsa_params:format(nonce, Nonce) ], State}.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -96,6 +102,7 @@ verify_auth(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
             Computed_Response = ehsa_binary:to_lower(Response_Fun(HA1, HA2)),
             case ehsa_binary:to_lower(Response) of
                 Computed_Response ->
+                    %% TODO: Check stale nonce.
                     {true, undefined, {Username, Password}, State};
                 _Other ->
                     unauthorized_info(State)
@@ -152,8 +159,8 @@ auth_scheme_0_test_() ->
     ?_test( <<"digest">> = ehsa_binary:to_lower(auth_scheme()) ).
 
 init_1_test_() ->
-    [ ?_test( {ok, {_, <<>>}} = init([]) ),
-      ?_test( {ok, {_, <<"Hoom">>}} = init([{realm, <<"Hoom">>}]) ) ].
+    [ ?_test( {ok, _} = init([]) ),
+      ?_test( {ok, _} = init([{realm, <<"Hoom">>}]) ) ].
 
 unauthorized_info_1_test_() ->
     %% TODO
