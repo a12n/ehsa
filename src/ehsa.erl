@@ -61,12 +61,7 @@
 %%--------------------------------------------------------------------
 -spec start([{atom(), term()}]) -> {ok, pid()} | ignore | {error, term()}.
 start(Args) ->
-    case proplists:get_value(register, Args, true) of
-        true ->
-            gen_server:start({local, ?MODULE}, ?MODULE, Args, []);
-        false ->
-            gen_server:start(?MODULE, Args, [])
-    end.
+    do_start(start, Args).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -74,12 +69,7 @@ start(Args) ->
 %%--------------------------------------------------------------------
 -spec start_link([{atom(), term()}]) -> {ok, pid()} | ignore | {error, term()}.
 start_link(Args) ->
-    case proplists:get_value(register, Args, true) of
-        true ->
-            gen_server:start_link({local, ?MODULE}, ?MODULE, Args, []);
-        false ->
-            gen_server:start_link(?MODULE, Args, [])
-    end.
+    do_start(start_link, Args).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -165,8 +155,8 @@ code_change(_Old_Vsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 handle_call(unauthorized_info, _From, {Handler, State}) ->
     {false, Res_Info, Next_State} = Handler:unauthorized_info(State),
-    Reply = [Handler:auth_scheme(), <<" ">>, Res_Info],
-    {reply, Reply, {Handler, Next_State}};
+    Scheme = Handler:auth_scheme(),
+    {reply, [Scheme, <<" ">>, Res_Info], {Handler, Next_State}};
 handle_call({verify_auth, Method, Req_Header, Req_Body, Pwd_Fun}, _From, {Handler, State}) ->
     [Req_Scheme, Req_Info] = binary:split(Req_Header, <<" ">>),
     Scheme = Handler:auth_scheme(),
@@ -232,3 +222,17 @@ init(Args) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
     ok.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+-spec do_start(start | start_link, [{atom(), term()}]) ->
+                      {ok, pid()} | ignore | {error, term()}.
+do_start(Fun_Name, Args) ->
+    case proplists:get_value(register, Args, true) of
+        true ->
+            gen_server:Fun_Name({local, ?MODULE}, ?MODULE, Args, []);
+        false ->
+            gen_server:Fun_Name(?MODULE, Args, [])
+    end.
