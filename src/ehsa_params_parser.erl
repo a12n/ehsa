@@ -79,7 +79,7 @@ parse(Input) when is_binary(Input) ->
   p(Input, Index, 'quoted_string', fun(I,D) -> (p_seq([p_string(<<"\"">>), p_zero_or_more(p_seq([p_not(p_string(<<"\"">>)), p_choose([p_string(<<"\\\\">>), p_string(<<"\\\"">>), p_anything()])])), p_string(<<"\"">>)]))(I,D) end, fun(Node, Idx) -> iolist_to_binary(lists:nth(2, Node)) end).
 
 'request_uri'(Input, Index) ->
-  p(Input, Index, 'request_uri', fun(I,D) -> (p_one_or_more(p_charclass(<<"[-#%&*+0-9A-Z_a-z~:\/?]">>)))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
+  p(Input, Index, 'request_uri', fun(I,D) -> (p_one_or_more(p_charclass(<<"[-#%&*+0-9A-Z_a-z~:\/?.]">>)))(I,D) end, fun(Node, Idx) -> iolist_to_binary(Node) end).
 
 'sp'(Input, Index) ->
   p(Input, Index, 'sp', fun(I,D) -> (p_one_or_more(p_string(<<"\s">>)))(I,D) end, fun(Node, Idx) -> Node end).
