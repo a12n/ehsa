@@ -43,7 +43,7 @@ start_link(Args) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec verify_auth(binary(),
+-spec verify_auth(atom() | binary(),
                   binary(),
                   binary() | iolist(),
                   ehsa:password_fun()) ->
@@ -56,13 +56,20 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | pid(),
-                  binary(),
+                  atom() | binary(),
                   binary(),
                   binary() | iolist(),
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_auth(Id, Method, Req_Header, Req_Body, Pwd_Fun) ->
-    gen_server:call(Id, {verify_auth, Method, Req_Header, Req_Body, Pwd_Fun}).
+    Binary_Method =
+        case is_atom(Method) of
+            true ->
+                atom_to_binary(Method, latin1);
+            false ->
+                Method
+        end,
+    gen_server:call(Id, {verify_auth, Binary_Method, Req_Header, Req_Body, Pwd_Fun}).
 
 %%%===================================================================
 %%% gen_server callbacks
