@@ -19,6 +19,8 @@
 -export([code_change/3, handle_call/3, handle_cast/2, handle_info/2,
          init/1, terminate/2]).
 
+-include_lib("eunit/include/eunit.hrl").
+
 %%%===================================================================
 %%% API
 %%%===================================================================
@@ -95,6 +97,8 @@ handle_call(_Request, _From, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
+handle_cast(stop, State) ->
+    {stop, normal, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -148,10 +152,12 @@ unauthorized(Res_Header) ->
                          {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_info(Req_Info, Pwd_Fun, State) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
+    ?debugFmt("Username ~p, password ~p", [Username, Password]),
     case Pwd_Fun(Username) of
         {ok, Password} ->
             {true, {Username, Password}};
         _Other ->
+            ?debugFmt("Other ~p", [_Other]),
             unauthorized(State)
     end.
 
@@ -161,7 +167,48 @@ verify_info(Req_Info, Pwd_Fun, State) ->
 
 -ifdef(TEST).
 
--include_lib("eunit/include/eunit.hrl").
+start_link_1_test_() ->
+    [ fun() ->
+              {ok, Pid} = start_link([{register, false}]),
+              true = is_pid(Pid),
+              ?assertException(exit, {noproc, _}, verify_auth(<<>>, fun(_) -> undefined end)),
+              gen_server:cast(Pid, stop)
+      end,
+
+      fun() ->
+              {ok, Pid} = start_link([]),
+              true = is_pid(Pid),
+              _Ans = verify_auth(<<>>, fun(_) -> undefined end),
+              gen_server:cast(Pid, stop)
+      end ].
+
+verify_auth_2_test_() ->
+    Pwd_Fun =
+        fun(<<"adm">>) -> {ok, <<"123">>};
+           (_) -> undefined
+        end,
+    [ fun() ->
+              {ok, _Pid} = start_link([{realm, <<"Dizzy">>}]),
+              Req_Info = base64:encode(<<"amd:321">>),
+              {false, Res_Header} =
+                  verify_auth(<<"Basic ", Req_Info/bytes>>, Pwd_Fun),
+              <<"Basic realm=\"Dizzy\"">> = iolist_to_binary(Res_Header),
+              gen_server:cast(?MODULE, stop)
+      end,
+      fun() ->
+              {ok, _Pid} = start_link([{realm, <<"Xyzzy">>}]),
+              {false, Res_Header} =
+                  verify_auth(<<"Uberscheme zzz">>, Pwd_Fun),
+              <<"Basic realm=\"Xyzzy\"">> = iolist_to_binary(Res_Header),
+              gen_server:cast(?MODULE, stop)
+      end,
+      fun() ->
+              {ok, _Pid} = start_link([{realm, <<"Fuzzy">>}]),
+              Req_Info = base64:encode(<<"adm:123">>),
+              {true, {<<"adm">>, <<"123">>}} =
+                  verify_auth(<<"Basic ", Req_Info/bytes>>, Pwd_Fun),
+              gen_server:cast(?MODULE, stop)
+      end ].
 
 %% init_1_test_() ->
 %%     [ ?_test( {ok, _} = init([]) ),
