@@ -49,7 +49,8 @@ decode(Hex) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Create hexadecimal representation of binary data.
+%% Create hexadecimal representation of binary data. Result is
+%% guaranteed to be in lower case.
 %% @end
 %%--------------------------------------------------------------------
 -spec encode(binary()) -> binary().
