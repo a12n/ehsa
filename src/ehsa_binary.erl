@@ -8,7 +8,8 @@
 -module(ehsa_binary).
 
 %% API
--export([format/1, join/2, to_integer/1, to_integer/2, to_lower/1]).
+-export([encode/1, join/2, decode/1, to_integer/1, to_integer/2,
+         to_lower/1]).
 
 %%%===================================================================
 %%% API
@@ -16,12 +17,44 @@
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Decode binary from hexadecimal representation.
+%% @end
+%%--------------------------------------------------------------------
+-spec decode(binary()) -> binary().
+decode(Hex) ->
+    << <<(case H of
+              $0 -> 0;
+              $1 -> 1;
+              $2 -> 2;
+              $3 -> 3;
+              $4 -> 4;
+              $5 -> 5;
+              $6 -> 6;
+              $7 -> 7;
+              $8 -> 8;
+              $9 -> 9;
+              $A -> 10;
+              $B -> 11;
+              $C -> 12;
+              $D -> 13;
+              $E -> 14;
+              $F -> 15;
+              $a -> 10;
+              $b -> 11;
+              $c -> 12;
+              $d -> 13;
+              $e -> 14;
+              $f -> 15
+          end):4>> || <<H>> <= Hex >>.
+
+%%--------------------------------------------------------------------
+%% @doc
 %% Create hexadecimal representation of binary data.
 %% @end
 %%--------------------------------------------------------------------
--spec format(binary()) -> binary().
-format(Data) ->
-    << <<(if N >= 10 -> N - 10 + $a; true -> N + $0 end)>> || <<N:4>> <= Data >>.
+-spec encode(binary()) -> binary().
+encode(Bin) ->
+    << <<(if B >= 10 -> B - 10 + $a; true -> B + $0 end)>> || <<B:4>> <= Bin >>.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -99,10 +132,19 @@ to_lower(Str) ->
 
 -ifdef(TEST).
 
-format_1_test_() ->
-    [ ?_test( <<"7f283d85">> = format(<<16#7f, 16#28, 16#3d, 16#85>>) ),
-      ?_test( <<"ff">> = format(<<255>>) ),
-      ?_test( <<>> = format(<<>>) ) ].
+decode_1_test_() ->
+    [ ?_test( <<1, 2, 3, 4>> = decode(<<"01020304">>) ),
+      ?_test( <<16#7f, 16#28, 16#3d, 16#85>> = decode(<<"7f283D85">>) ),
+      ?_test( <<16#a, 16#b, 16#c, 16#d, 16#e, 16#f>> = decode(<<"0a0B0c0D0e0F">>) ),
+      ?_test( <<>> = decode(<<>>) ),
+      ?_test( <<10, 12, 14>> = decode(<<"ACE">>) ),
+      ?_test( <<1, 16#23, 16#45, 16#67, 16#89, 16#ab, 16#cd, 16#ef>> = decode(<<"0123456789aBcDeF">>) ),
+      ?_assertError(_, decode(<<"abcdefghijkl">>)) ].
+
+encode_1_test_() ->
+    [ ?_test( <<"7f283d85">> = encode(<<16#7f, 16#28, 16#3d, 16#85>>) ),
+      ?_test( <<"ff">> = encode(<<255>>) ),
+      ?_test( <<>> = encode(<<>>) ) ].
 
 join_2_test_() ->
     [ ?_test( <<"a:b:c">> = iolist_to_binary(join([<<"a">>, <<"b">>, <<"c">>], <<$:>>)) ),
