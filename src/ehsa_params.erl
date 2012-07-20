@@ -34,6 +34,7 @@ format([{Key, Value} | Other]) ->
 -spec format(atom(), binary() | iolist()) -> binary() | iolist().
 format(Key, Value)
   when Key =:= cnonce;
+       Key =:= comment;
        Key =:= domain;
        Key =:= nonce;
        Key =:= opaque;
