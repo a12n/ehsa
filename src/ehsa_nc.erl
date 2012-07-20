@@ -87,7 +87,7 @@ code_change(_Old_Vsn, State, _Extra) ->
 handle_call({insert, Nonce}, _From, _State = {Dict, Max, TTL}) ->
     error = dict:find(Nonce, Dict),
     Next_Dict = dict:update_counter(Nonce, 1, Dict),
-    erlang:send_after(TTL, self(), {remove, Nonce}),
+    erlang:send_after(TTL, self(), {delete, Nonce}),
     {reply, ok, {Next_Dict, Max, TTL}};
 handle_call({update, Nonce}, _From, _State = {Dict, Max, TTL}) ->
     {Reply, Next_Dict} =
@@ -118,7 +118,7 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
-handle_info({remove, Nonce}, _State = {Dict, TTL}) ->
+handle_info({delete, Nonce}, _State = {Dict, TTL}) ->
     Next_Dict = dict:erase(Nonce, Dict),
     {noreply, {Next_Dict, TTL}};
 handle_info(_Info, State) ->
