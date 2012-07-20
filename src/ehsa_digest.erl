@@ -122,8 +122,7 @@ verify_auth(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
 %%--------------------------------------------------------------------
 -spec make_nonce() -> binary().
 make_nonce() ->
-    X = term_to_binary({node(), self(), make_ref(), now()}),
-    ehsa_binary:encode(crypto:md5(X)).
+    ehsa_binary:encode(crypto:rand_bytes(16)).
 
 %%--------------------------------------------------------------------
 %% @private
