@@ -28,12 +28,7 @@
 %% @end
 %%--------------------------------------------------------------------
 start_link(Args) ->
-    case proplists:get_value(register, Args, true) of
-        true ->
-            gen_server:start_link({local, ?MODULE}, ?MODULE, Args, []);
-        false ->
-            gen_server:start_link(?MODULE, Args, [])
-    end.
+    ehsa_common:start_link(?MODULE, Args).
 
 %%%===================================================================
 %%% API
