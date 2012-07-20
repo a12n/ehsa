@@ -31,15 +31,16 @@ auth_scheme() ->
 -spec init([{atom(), term()}]) -> term().
 init(Args) ->
     Realm = proplists:get_value(realm, Args, <<>>),
-    {ok, Realm}.
+    Res_Info = ehsa_params:format(realm, Realm),
+    {ok, Res_Info}.
 
 %%--------------------------------------------------------------------
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
 -spec unauthorized_info(term()) -> {false, binary() | iolist(), term()}.
-unauthorized_info(State = Realm) ->
-    {false, ehsa_params:format(realm, Realm), State}.
+unauthorized_info(State = Res_Info) ->
+    {false, Res_Info, State}.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -74,8 +75,8 @@ auth_scheme_0_test_() ->
     ?_test( <<"basic">> = ehsa_binary:to_lower(auth_scheme()) ).
 
 init_1_test_() ->
-    [ ?_test( {ok, <<>>} = init([]) ),
-      ?_test( {ok, <<"Hoom">>} = init([{realm, <<"Hoom">>}]) ) ].
+    [ ?_test( {ok, _} = init([]) ),
+      ?_test( {ok, _} = init([{realm, <<"Hoom">>}]) ) ].
 
 unauthorized_info_1_test_() ->
     [ fun() ->
