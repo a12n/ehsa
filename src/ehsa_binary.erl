@@ -138,7 +138,7 @@ decode_1_test_() ->
       ?_test( <<16#7f, 16#28, 16#3d, 16#85>> = decode(<<"7f283D85">>) ),
       ?_test( <<16#a, 16#b, 16#c, 16#d, 16#e, 16#f>> = decode(<<"0a0B0c0D0e0F">>) ),
       ?_test( <<>> = decode(<<>>) ),
-      ?_test( <<10, 12, 14>> = decode(<<"ACE">>) ),
+      ?_test( <<10, 12, 14>> = decode(<<"0A0C0E">>) ),
       ?_test( <<1, 16#23, 16#45, 16#67, 16#89, 16#ab, 16#cd, 16#ef>> = decode(<<"0123456789aBcDeF">>) ),
       ?_assertError(_, decode(<<"abcdefghijkl">>)) ].
 
