@@ -13,8 +13,7 @@
 -export([start_link/1]).
 
 %% API
--export([unauthorized_info/0, unauthorized_info/1, verify_auth/2,
-         verify_auth/3]).
+-export([verify_auth/2, verify_auth/3]).
 
 %% gen_server callbacks
 -export([code_change/3, handle_call/3, handle_cast/2, handle_info/2,
@@ -45,25 +44,9 @@ start_link(Args) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec unauthorized_info() -> binary() | iolist().
-unauthorized_info() ->
-    unauthorized_info(?MODULE).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--spec unauthorized_info(atom() | pid()) -> binary() | iolist().
-unauthorized_info(Id) ->
-    gen_server:call(Id, unauthorized_info).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--spec verify_auth(binary(), ehsa:password_fun()) ->
-                         {true, binary() | iolist() | undefined, ehsa:credentials()} |
-                         {false, binary() | iolist()}.
+-spec verify_auth(binary(),
+                  ehsa:password_fun()) ->
+                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_auth(Req_Header, Pwd_Fun) ->
     verify_auth(?MODULE, Req_Header, Pwd_Fun).
 
@@ -71,9 +54,10 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec verify_auth(atom() | pid(), binary(), ehsa:password_fun()) ->
-                         {true, binary() | iolist() | undefined, ehsa:credentials()} |
-                         {false, binary() | iolist()}.
+-spec verify_auth(atom() | pid(),
+                  binary(),
+                  ehsa:password_fun()) ->
+                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_auth(Id, Req_Header, Pwd_Fun) ->
     gen_server:call(Id, {verify_auth, Req_Header, Pwd_Fun}).
 
@@ -94,22 +78,18 @@ code_change(_Old_Vsn, State, _Extra) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
-handle_call(unauthorized_info, _From, State = Res_Header) ->
-    {reply, Res_Header, State};
-handle_call({verify_auth, Req_Header, Pwd_Fun}, _From, State = Res_Header) ->
-    [Scheme, Req_Info] = binary:split(Req_Header, <<$ >>),
+handle_call({verify_auth, Req_Header, Pwd_Fun}, _From, State) ->
     Reply =
-        case ehsa_binary:to_lower(Scheme) of
-            <<"basic">> ->
-                [Usr, Pwd] = binary:split(base64:decode(Req_Info), <<$:>>),
-                case Pwd_Fun(Usr) of
-                    {ok, Pwd} ->
-                        {true, undefined, {Usr, Pwd}};
+        case binary:split(Req_Header, <<$ >>) of
+            [Scheme, Req_Info] ->
+                case ehsa_binary:to_lower(Scheme) of
+                    <<"basic">> ->
+                        verify_info(Req_Info, Pwd_Fun, State);
                     _Other ->
-                        {false, Res_Header}
+                        unauthorized(State)
                 end;
             _Other ->
-                {false, Res_Header}
+                unauthorized(State)
         end,
     {reply, Reply, State};
 handle_call(_Request, _From, State) ->
@@ -120,8 +100,6 @@ handle_call(_Request, _From, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
-handle_cast(stop, State) ->
-    {stop, normal, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -141,7 +119,7 @@ handle_info(_Info, State) ->
 -spec init([{atom(), term()}]) -> {ok, term()} | {stop, term()}.
 init(Args) ->
     Realm = proplists:get_value(realm, Args, <<>>),
-    Res_Header = [<<"Basic ">>, ehsa_params:format(realm, Realm)],
+    Res_Header = [ <<"Basic ">>, ehsa_params:format(realm, Realm) ],
     {ok, Res_Header}.
 
 %%--------------------------------------------------------------------
@@ -151,6 +129,36 @@ init(Args) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
     ok.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
+-spec unauthorized(binary() | iolist()) ->
+                          {false, binary() | iolist()}.
+unauthorized(Res_Header) ->
+    {false, Res_Header}.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
+-spec verify_info(binary(), ehsa:password_fun(), term()) ->
+                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+verify_info(Req_Info, Pwd_Fun, State) ->
+    [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
+    case Pwd_Fun(Username) of
+        {ok, Password} ->
+            {true, {Username, Password}};
+        _Other ->
+            unauthorized(State)
+    end.
 
 %%%===================================================================
 %%% Tests
