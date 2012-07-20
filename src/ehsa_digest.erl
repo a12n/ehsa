@@ -123,7 +123,7 @@ verify_auth(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
 -spec make_nonce() -> binary().
 make_nonce() ->
     X = term_to_binary({node(), self(), make_ref(), now()}),
-    ehsa_binary:format(crypto:md5(X)).
+    ehsa_binary:encode(crypto:md5(X)).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -134,7 +134,7 @@ make_nonce() ->
 md5(Data) when is_function(Data, 0) ->
     md5(crypto:md5_init(), Data());
 md5(Data) ->
-    ehsa_binary:format(crypto:md5(Data)).
+    ehsa_binary:encode(crypto:md5(Data)).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -143,7 +143,7 @@ md5(Data) ->
 %%--------------------------------------------------------------------
 -spec md5(binary(), {iolist() | binary(), done | ehsa:body_fun()}) -> binary().
 md5(Ctx, {Data, done}) ->
-    ehsa_binary:format(crypto:md5_final(crypto:md5_update(Ctx, Data)));
+    ehsa_binary:encode(crypto:md5_final(crypto:md5_update(Ctx, Data)));
 md5(Ctx, {Data, Next}) ->
     md5(crypto:md5_update(Ctx, Data), Next()).
 
