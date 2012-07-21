@@ -165,6 +165,13 @@ verify_info(Req_Info, Pwd_Fun, State) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
+start_link_1_test_() ->
+    [ fun() ->
+              {ok, Pid} = start_link([{register, false}]),
+              ?assertException(exit, {noproc, _}, verify_auth(<<>>, fun(_) -> undefined end)),
+              gen_server:cast(Pid, stop)
+      end ].
+
 verify_auth_2_test_() ->
     Pwd_Fun =
         fun(<<"adm">>) -> {ok, <<"123">>};
