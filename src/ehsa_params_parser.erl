@@ -49,7 +49,7 @@ parse(Input) when is_binary(Input) ->
   p(Input, Index, 'digest_uri', fun(I,D) -> (p_seq([p_string(<<"uri">>), p_string(<<"=">>), p_string(<<"\"">>), fun 'request_uri'/2, p_string(<<"\"">>)]))(I,D) end, fun(Node, Idx) -> {uri, lists:nth(4, Node)} end).
 
 'message_qop'(Input, Index) ->
-  p(Input, Index, 'message_qop', fun(I,D) -> (p_seq([p_string(<<"qop">>), p_string(<<"=">>), p_choose([fun 'qop_value'/2, fun 'token'/2])]))(I,D) end, fun(Node, Idx) -> {qop, lists:nth(3, Node)} end).
+  p(Input, Index, 'message_qop', fun(I,D) -> (p_seq([p_string(<<"qop">>), p_string(<<"=">>), p_optional(p_string(<<"\"">>)), p_choose([fun 'qop_value'/2, fun 'token'/2]), p_optional(p_string(<<"\"">>))]))(I,D) end, fun(Node, Idx) -> {qop, lists:nth(4, Node)} end).
 
 'cnonce'(Input, Index) ->
   p(Input, Index, 'cnonce', fun(I,D) -> (p_seq([p_string(<<"cnonce">>), p_string(<<"=">>), fun 'quoted_string'/2]))(I,D) end, fun(Node, Idx) -> {cnonce, lists:nth(3, Node)} end).
