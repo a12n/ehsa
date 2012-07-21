@@ -50,11 +50,18 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | pid(),
-                  binary(),
+                  binary() | undefined,
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_auth(Id, Req_Header, Pwd_Fun) ->
-    gen_server:call(Id, {verify_auth, Req_Header, Pwd_Fun}).
+    Bin_Req_Header =
+        case Req_Header of
+            undefined ->
+                <<>>;
+            Other ->
+                Other
+        end,
+    gen_server:call(Id, {verify_auth, Bin_Req_Header, Pwd_Fun}).
 
 %%%===================================================================
 %%% gen_server callbacks
