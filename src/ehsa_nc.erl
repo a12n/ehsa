@@ -108,10 +108,10 @@ handle_call({insert, Nonce}, _From, _State = {NCs, Max, TTL}) ->
 handle_call({verify, Nonce, NC}, _From, _State = {NCs, Max, TTL}) ->
     {Reply, Next_NCs} =
         case dict:find(Nonce, NCs) of
+            {ok, Value} when Value > Max ->
+                {undefined, dict:erase(Nonce, NCs)};
             {ok, Value} when Value =:= NC ->
                 {ok, dict:update_counter(Nonce, 1, NCs)};
-            {ok, Value} when Value >= Max ->
-                {undefined, dict:erase(Nonce, NCs)};
             {ok, _Other} ->
                 {badarg, NCs};
             error ->
@@ -126,6 +126,8 @@ handle_call(_Request, _From, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
+handle_cast(stop, State) ->
+    {stop, normal, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -159,3 +161,41 @@ init(Args) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
     ok.
+
+%%%===================================================================
+%%% Tests
+%%%===================================================================
+
+-ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
+
+verify_2_test_() ->
+    [ fun() ->
+              {ok, _Pid} = start_link([{nc_ttl, 3}]),
+              Nonce = create(),
+              true = is_binary(Nonce),
+              ok = verify(Nonce, 1),
+              badarg = verify(Nonce, 1),
+              ok = verify(Nonce, 2),
+              timer:sleep(3500),
+              undefined = verify(Nonce, 3),
+              undefined = verify(Nonce, 2),
+              gen_server:cast(?MODULE, stop)
+      end,
+      fun() ->
+              {ok, _Pid} = start_link([{max_nc, 5}]),
+              Nonce = create(),
+              true = is_binary(Nonce),
+              badarg = verify(Nonce, 0),
+              ok = verify(Nonce, 1),
+              ok = verify(Nonce, 2),
+              ok = verify(Nonce, 3),
+              ok = verify(Nonce, 4),
+              ok = verify(Nonce, 5),
+              undefined = verify(Nonce, 6),
+              undefined = verify(Nonce, 5),
+              gen_server:cast(?MODULE, stop)
+      end ].
+
+-endif.
