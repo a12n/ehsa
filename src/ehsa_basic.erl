@@ -19,8 +19,6 @@
 -export([code_change/3, handle_call/3, handle_cast/2, handle_info/2,
          init/1, terminate/2]).
 
--include_lib("eunit/include/eunit.hrl").
-
 %%%===================================================================
 %%% API
 %%%===================================================================
@@ -152,12 +150,10 @@ unauthorized(Res_Header) ->
                          {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_info(Req_Info, Pwd_Fun, State) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
-    ?debugFmt("Username ~p, password ~p", [Username, Password]),
     case Pwd_Fun(Username) of
         {ok, Password} ->
             {true, {Username, Password}};
         _Other ->
-            ?debugFmt("Other ~p", [_Other]),
             unauthorized(State)
     end.
 
@@ -167,20 +163,7 @@ verify_info(Req_Info, Pwd_Fun, State) ->
 
 -ifdef(TEST).
 
-start_link_1_test_() ->
-    [ fun() ->
-              {ok, Pid} = start_link([{register, false}]),
-              true = is_pid(Pid),
-              ?assertException(exit, {noproc, _}, verify_auth(<<>>, fun(_) -> undefined end)),
-              gen_server:cast(Pid, stop)
-      end,
-
-      fun() ->
-              {ok, Pid} = start_link([]),
-              true = is_pid(Pid),
-              _Ans = verify_auth(<<>>, fun(_) -> undefined end),
-              gen_server:cast(Pid, stop)
-      end ].
+-include_lib("eunit/include/eunit.hrl").
 
 verify_auth_2_test_() ->
     Pwd_Fun =
@@ -200,6 +183,8 @@ verify_auth_2_test_() ->
               {false, Res_Header} =
                   verify_auth(<<"Uberscheme zzz">>, Pwd_Fun),
               <<"Basic realm=\"Xyzzy\"">> = iolist_to_binary(Res_Header),
+              {false, Res_Header} =
+                  verify_auth(<<>>, Pwd_Fun),
               gen_server:cast(?MODULE, stop)
       end,
       fun() ->
