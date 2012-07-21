@@ -52,19 +52,26 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | pid(),
                   atom() | binary(),
-                  binary(),
+                  binary() | undefined,
                   binary() | iolist(),
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, binary() | iolist()}.
 verify_auth(Id, Method, Req_Header, Req_Body, Pwd_Fun) ->
-    Binary_Method =
+    Bin_Method =
         case is_atom(Method) of
             true ->
                 atom_to_binary(Method, latin1);
             false ->
                 Method
         end,
-    gen_server:call(Id, {verify_auth, Binary_Method, Req_Header, Req_Body, Pwd_Fun}).
+    Bin_Req_Header =
+        case Req_Header of
+            undefined ->
+                <<>>;
+            Other ->
+                Other
+        end,
+    gen_server:call(Id, {verify_auth, Bin_Method, Bin_Req_Header, Req_Body, Pwd_Fun}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -128,9 +135,14 @@ init(Args) ->
     Res_Header = [ <<"Digest ">>,
                    ehsa_params:format(realm, Realm),
                    <<", ">>,
-                   ehsa_params:format(qop, <<"auth, auth-int">>),
-                   <<", ">>,
-                   ehsa_params:format(domain, ehsa_binary:join(Domain, <<" ">>)) ],
+                   ehsa_params:format(qop, <<"auth,auth-int">>),
+                   case Domain of
+                       [_H | _T] ->
+                           [ <<", ">>,
+                             ehsa_params:format(domain, ehsa_binary:join(Domain, <<" ">>)) ];
+                       _Other ->
+                           []
+                   end ],
     {ok, Res_Header}.
 
 %%--------------------------------------------------------------------
@@ -208,11 +220,11 @@ response(QOP, HA1, Nonce, NC, CNonce, HA2)
                    binary() | iolist(),
                    binary() | iolist()) ->
                           {false, binary() | iolist()}.
-unauthorized(Stale, Comment, Res_Header) ->
+unauthorized(Stale, _Comment, Res_Header) ->
     Nonce = ehsa_nc:create(),
     {false, [ Res_Header,
-              <<", ">>,
-              ehsa_params:format(comment, Comment),
+              %% <<", ">>,
+              %% ehsa_params:format(comment, Comment),
               <<", ">>,
               ehsa_params:format(nonce, Nonce),
               case Stale of
@@ -249,9 +261,9 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
     QOP = proplists:get_value(qop, Params),
     %% Check optional params
     true = (Algorithm =:= <<"MD5">>),
-    true = (QOP =:= undefined or (((QOP =:= <<"auth">>) or
-                                   (QOP =:= <<"auth-int">>)) and
-                                  (CNonce =/= undefined) and (NC =/= undefined))),
+    true = ((QOP =:= undefined) or (((QOP =:= <<"auth">>) or
+                                    (QOP =:= <<"auth-int">>)) and
+                                   (CNonce =/= undefined) and (NC =/= undefined))),
     %% Check NC
     case verify_nc(QOP, Nonce, NC) of
         ok ->
