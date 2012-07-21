@@ -54,8 +54,9 @@ username <- "username" '=' quoted_string
 digest_uri <- "uri" '=' '"' request_uri '"'
 `{uri, lists:nth(4, Node)}` ;
 
-message_qop <- "qop" '=' (qop_value / token)
-`{qop, lists:nth(3, Node)}` ;
+%% Some clients (cURL) formats message_qop incorrectly as quoted string.
+message_qop <- "qop" '=' '"'? (qop_value / token) '"'?
+`{qop, lists:nth(4, Node)}` ;
 
 cnonce <- "cnonce" '=' quoted_string
 `{cnonce, lists:nth(3, Node)}` ;
