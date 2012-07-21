@@ -262,8 +262,8 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
     %% Check optional params
     true = (Algorithm =:= <<"MD5">>),
     true = ((QOP =:= undefined) or (((QOP =:= <<"auth">>) or
-                                    (QOP =:= <<"auth-int">>)) and
-                                   (CNonce =/= undefined) and (NC =/= undefined))),
+                                     (QOP =:= <<"auth-int">>)) and
+                                    (CNonce =/= undefined) and (NC =/= undefined))),
     %% Check NC
     case verify_nc(QOP, Nonce, NC) of
         ok ->
