@@ -39,7 +39,7 @@ start_link(Args) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
-                  binary(),
+                  binary() | undefined,
                   binary() | iolist(),
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, binary() | iolist()}.
