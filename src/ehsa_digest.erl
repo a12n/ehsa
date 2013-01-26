@@ -42,10 +42,9 @@ start_link(Args) ->
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
                   binary() | undefined,
-                  binary() | iolist(),
+                  iodata(),
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} |
-                         {false, binary() | iolist()}.
+                         {true, ehsa:credentials()} | {false, iodata()}.
 verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
     verify_auth(?MODULE, Method, Req_Header, Req_Body, Pwd_Fun).
 
@@ -56,9 +55,9 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 -spec verify_auth(atom() | pid(),
                   atom() | binary(),
                   binary() | undefined,
-                  binary() | iolist(),
+                  iodata(),
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+                         {true, ehsa:credentials()} | {false, iodata()}.
 verify_auth(Id, Method, Req_Header, Req_Body, Pwd_Fun) ->
     Bin_Method =
         case is_atom(Method) of
@@ -131,7 +130,7 @@ handle_info(_Info, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec init([{atom(), term()}]) -> {ok, binary() | iolist()}.
+-spec init([{atom(), term()}]) -> {ok, iodata()}.
 init(Args) ->
     Domain = proplists:get_value(domain, Args, []),
     Realm = proplists:get_value(realm, Args, <<>>),
@@ -179,7 +178,7 @@ ha1(Username, Realm, Password) ->
 -spec ha2(binary() | undefined,
           binary(),
           binary(),
-          binary() | iolist()) -> binary().
+          iodata()) -> binary().
 ha2(_QOP = <<"auth-int">>, Method, URI, Req_Body) ->
     md5([Method, $:, URI, $:, md5(Req_Body)]);
 ha2(QOP, Method, URI, _Req_Body)
@@ -192,7 +191,7 @@ ha2(QOP, Method, URI, _Req_Body)
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec md5(binary() | iolist()) -> binary().
+-spec md5(iodata()) -> binary().
 md5(Data) ->
     ehsa_binary:encode(crypto:md5(Data)).
 
@@ -220,9 +219,8 @@ response(QOP, HA1, Nonce, NC, CNonce, HA2)
 %% @end
 %%--------------------------------------------------------------------
 -spec unauthorized(boolean(),
-                   binary() | iolist(),
-                   binary() | iolist()) ->
-                          {false, binary() | iolist()}.
+                   iodata(),
+                   iodata()) -> {false, iodata()}.
 unauthorized(Stale, _Comment, Res_Header) ->
     Nonce = ehsa_nc:create(),
     {false, [ Res_Header,
@@ -245,10 +243,10 @@ unauthorized(Stale, _Comment, Res_Header) ->
 %%--------------------------------------------------------------------
 -spec verify_info(binary(),
                   binary(),
-                  binary() | iolist(),
+                  iodata(),
                   ehsa:password_fun(),
-                  binary() | iolist()) ->
-                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+                  iodata()) ->
+                         {true, ehsa:credentials()} | {false, iodata()}.
 verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
     Params = ehsa_params:parse(Req_Info),
     %% Mandatory params
