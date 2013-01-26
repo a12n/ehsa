@@ -4,6 +4,8 @@
 %%% @doc
 %%%
 %%% @end
+%%% @todo Body streaming.
+%%% @todo Variant without integrity protection.
 %%%-------------------------------------------------------------------
 -module(ehsa_digest).
 
@@ -42,7 +44,8 @@ start_link(Args) ->
                   binary() | undefined,
                   binary() | iolist(),
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+                         {true, ehsa:credentials()} |
+                         {false, binary() | iolist()}.
 verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
     verify_auth(?MODULE, Method, Req_Header, Req_Body, Pwd_Fun).
 
