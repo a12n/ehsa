@@ -8,7 +8,7 @@
 -module(ehsa_binary).
 
 %% API
--export([encode/1, join/2, decode/1, to_integer/1, to_integer/2,
+-export([decode/1, encode/1, join/2, to_integer/1, to_integer/2,
          to_lower/1]).
 
 %%%===================================================================
@@ -135,6 +135,7 @@ to_lower(Str) ->
 
 decode_1_test_() ->
     [ ?_test( <<1, 2, 3, 4>> = decode(<<"01020304">>) ),
+      ?_test( <<1, 2:4>> = decode(<<"012">>) ),
       ?_test( <<16#7f, 16#28, 16#3d, 16#85>> = decode(<<"7f283D85">>) ),
       ?_test( <<16#a, 16#b, 16#c, 16#d, 16#e, 16#f>> = decode(<<"0a0B0c0D0e0F">>) ),
       ?_test( <<>> = decode(<<>>) ),
@@ -145,6 +146,7 @@ decode_1_test_() ->
 encode_1_test_() ->
     [ ?_test( <<"7f283d85">> = encode(<<16#7f, 16#28, 16#3d, 16#85>>) ),
       ?_test( <<"ff">> = encode(<<255>>) ),
+      ?_test( <<"012">> = encode(<<1, 2:4>>) ),
       ?_test( <<>> = encode(<<>>) ) ].
 
 join_2_test_() ->
