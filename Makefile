@@ -1,5 +1,5 @@
 
-.PHONY: all app clean shell test
+.PHONY: all app clean distclean shell test
 
 ERL ?= erl
 REBAR ?= ./rebar
@@ -12,6 +12,9 @@ app:
 
 clean:
 	$(REBAR) clean
+
+distclean: clean
+	rm -rf .eunit
 
 shell:
 	$(ERL) -smp -pa ebin/ -pa deps/*/ebin/
