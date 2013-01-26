@@ -62,7 +62,7 @@ encode(Bin) ->
 %% Join binary strings with separator.
 %% @end
 %%--------------------------------------------------------------------
--spec join([binary() | iolist()], binary() | iolist()) -> binary() | iolist().
+-spec join([iodata()], iodata()) -> iodata().
 join([], _Sep) ->
     <<>>;
 join([H], _Sep) ->

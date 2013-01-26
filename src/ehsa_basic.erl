@@ -41,7 +41,7 @@ start_link(Args) ->
 %%--------------------------------------------------------------------
 -spec verify_auth(binary(),
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+                         {true, ehsa:credentials()} | {false, iodata()}.
 verify_auth(Req_Header, Pwd_Fun) ->
     verify_auth(?MODULE, Req_Header, Pwd_Fun).
 
@@ -52,7 +52,7 @@ verify_auth(Req_Header, Pwd_Fun) ->
 -spec verify_auth(atom() | pid(),
                   binary() | undefined,
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+                         {true, ehsa:credentials()} | {false, iodata()}.
 verify_auth(Id, Req_Header, Pwd_Fun) ->
     Bin_Req_Header =
         case Req_Header of
@@ -143,8 +143,7 @@ terminate(_Reason, _State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec unauthorized(binary() | iolist()) ->
-                          {false, binary() | iolist()}.
+-spec unauthorized(iodata()) -> {false, iodata()}.
 unauthorized(Res_Header) ->
     {false, Res_Header}.
 
@@ -154,7 +153,7 @@ unauthorized(Res_Header) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_info(binary(), ehsa:password_fun(), term()) ->
-                         {true, ehsa:credentials()} | {false, binary() | iolist()}.
+                         {true, ehsa:credentials()} | {false, iodata()}.
 verify_info(Req_Info, Pwd_Fun, State) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of

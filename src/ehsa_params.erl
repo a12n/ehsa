@@ -18,7 +18,7 @@
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec format([{atom(), binary() | iolist()}]) -> binary() | iolist().
+-spec format([{atom(), iodata()}]) -> iodata().
 format([]) ->
     [];
 format([{Key, Value}]) ->
@@ -31,7 +31,7 @@ format([{Key, Value} | Other]) ->
 %% Some auth parameter values must be quoted.
 %% @end
 %%--------------------------------------------------------------------
--spec format(atom(), binary() | iolist()) -> binary() | iolist().
+-spec format(atom(), iodata()) -> iodata().
 format(Key, Value)
   when Key =:= cnonce;
        Key =:= comment;
