@@ -9,28 +9,8 @@
 %%%-------------------------------------------------------------------
 -module(ehsa_digest).
 
--behaviour(gen_server).
-
-%% API
--export([start_link/1]).
-
 %% API
 -export([verify_auth/4, verify_auth/5]).
-
-%% gen_server callbacks
--export([code_change/3, handle_call/3, handle_cast/2, handle_info/2,
-         init/1, terminate/2]).
-
-%%%===================================================================
-%%% API
-%%%===================================================================
-
-%%--------------------------------------------------------------------
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
-start_link(Args) ->
-    ehsa_common:start_link(?MODULE, Args).
 
 %%%===================================================================
 %%% API
@@ -45,115 +25,39 @@ start_link(Args) ->
                   iodata(),
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
+
 verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
-    verify_auth(?MODULE, Method, Req_Header, Req_Body, Pwd_Fun).
+    verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, []).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec verify_auth(atom() | pid(),
-                  atom() | binary(),
+-spec verify_auth(atom() | binary(),
                   binary() | undefined,
                   iodata(),
-                  ehsa:password_fun()) ->
+                  ehsa:password_fun(),
+                  ehsa:options()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
-verify_auth(Id, Method, Req_Header, Req_Body, Pwd_Fun) ->
-    Bin_Method =
-        case is_atom(Method) of
-            true ->
-                atom_to_binary(Method, latin1);
-            false ->
-                Method
-        end,
-    Bin_Req_Header =
-        case Req_Header of
-            undefined ->
-                <<>>;
-            Other ->
-                Other
-        end,
-    gen_server:call(Id, {verify_auth, Bin_Method, Bin_Req_Header, Req_Body, Pwd_Fun}).
 
-%%%===================================================================
-%%% gen_server callbacks
-%%%===================================================================
+verify_auth(Method, undefined, Req_Body, Pwd_Fun, Options) ->
+    verify_auth(Method, <<>>, Req_Body, Pwd_Fun, Options);
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
-code_change(_Old_Vsn, State, _Extra) ->
-    {ok, State}.
+verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_atom(Method) ->
+    verify_auth(atom_to_binary(Method, latin1), Req_Header, Req_Body, Pwd_Fun, Options);
 
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
-handle_call({verify_auth, Method, Req_Header, Req_Body, Pwd_Fun}, _From, State) ->
-    Reply =
-        case binary:split(Req_Header, <<$ >>) of
-            [Scheme, Req_Info] ->
-                case ehsa_binary:to_lower(Scheme) of
-                    <<"digest">> ->
-                        verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State);
-                    _Other ->
-                        unauthorized(false, <<"Invalid auth scheme">>, State)
-                end;
-            _Other ->
-                unauthorized(false, <<"Invalid/missing auth information">>, State)
-        end,
-    {reply, Reply, State};
-handle_call(_Request, _From, State) ->
-    {reply, ok, State}.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
-handle_info(_Info, State) ->
-    {noreply, State}.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--spec init([{atom(), term()}]) -> {ok, iodata()}.
-init(Args) ->
-    Domain = proplists:get_value(domain, Args, []),
-    Realm = proplists:get_value(realm, Args, <<>>),
-    Res_Header = [ <<"Digest ">>,
-                   ehsa_params:format(realm, Realm),
-                   <<", ">>,
-                   ehsa_params:format(qop, <<"auth,auth-int">>),
-                   case Domain of
-                       [_H | _T] ->
-                           [ <<", ">>,
-                             ehsa_params:format(domain, ehsa_binary:join(Domain, <<" ">>)) ];
-                       _Other ->
-                           []
-                   end ],
-    {ok, Res_Header}.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
-    ok.
+verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, Options) ->
+    case binary:split(Req_Header, <<$ >>) of
+        [Scheme, Req_Info] ->
+            case ehsa_binary:to_lower(Scheme) of
+                <<"digest">> ->
+                    verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options);
+                _Other ->
+                    unauthorized(false, <<"Invalid auth scheme">>, Options)
+            end;
+        _Other ->
+            unauthorized(false, <<"Invalid/missing auth information">>, Options)
+    end.
 
 %%%===================================================================
 %%% Internal functions
@@ -167,6 +71,7 @@ terminate(_Reason, _State) ->
 -spec ha1(binary(),
           binary(),
           binary()) -> binary().
+
 ha1(Username, Realm, Password) ->
     md5([Username, $:, Realm, $:, Password]).
 
@@ -179,8 +84,10 @@ ha1(Username, Realm, Password) ->
           binary(),
           binary(),
           iodata()) -> binary().
+
 ha2(_QOP = <<"auth-int">>, Method, URI, Req_Body) ->
     md5([Method, $:, URI, $:, md5(Req_Body)]);
+
 ha2(QOP, Method, URI, _Req_Body)
   when QOP =:= <<"auth">>;
        QOP =:= undefined ->
@@ -192,6 +99,7 @@ ha2(QOP, Method, URI, _Req_Body)
 %% @end
 %%--------------------------------------------------------------------
 -spec md5(iodata()) -> binary().
+
 md5(Data) ->
     ehsa_binary:encode(crypto:md5(Data)).
 
@@ -206,8 +114,10 @@ md5(Data) ->
                binary() | undefined,
                binary() | undefined,
                binary()) -> binary().
+
 response(_QOP = undefined, HA1, Nonce, _NC, _CNonce, HA2) ->
     md5([HA1, $:, Nonce, $:, HA2]);
+
 response(QOP, HA1, Nonce, NC, CNonce, HA2)
   when QOP =:= <<"auth">>;
        QOP =:= <<"auth-int">> ->
@@ -220,21 +130,36 @@ response(QOP, HA1, Nonce, NC, CNonce, HA2)
 %%--------------------------------------------------------------------
 -spec unauthorized(boolean(),
                    iodata(),
-                   iodata()) -> {false, iodata()}.
-unauthorized(Stale, _Comment, Res_Header) ->
+                   ehsa:options()) -> {false, iodata()}.
+
+unauthorized(Stale, _Comment, Options) ->
+    Domain = proplists:get_value(domain, Options, []),
     Nonce = ehsa_nc:create(),
-    {false, [ Res_Header,
-              %% <<", ">>,
-              %% ehsa_params:format(comment, Comment),
-              <<", ">>,
-              ehsa_params:format(nonce, Nonce),
-              case Stale of
-                  true ->
-                      [ <<", ">>,
-                        ehsa_params:format(stale, <<"true">>) ];
-                  false ->
-                      []
-              end ]}.
+    Realm = proplists:get_value(realm, Options, <<>>),
+    Res_Header =
+        [ <<"Digest ">>,
+          ehsa_params:format(realm, Realm),
+          <<", ">>,
+          ehsa_params:format(qop, <<"auth,auth-int">>),
+          <<", ">>,
+          ehsa_params:format(nonce, Nonce),
+          %% <<", ">>,
+          %% ehsa_params:format(comment, _Comment),
+          case Domain of
+              [_H | _T] ->
+                  [ <<", ">>,
+                    ehsa_params:format(domain, ehsa_binary:join(Domain, <<" ">>)) ];
+              _Other ->
+                  []
+          end,
+          case Stale of
+              true ->
+                  [ <<", ">>,
+                    ehsa_params:format(stale, <<"true">>) ];
+              false ->
+                  []
+          end ],
+    {false, Res_Header}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -245,9 +170,10 @@ unauthorized(Stale, _Comment, Res_Header) ->
                   binary(),
                   iodata(),
                   ehsa:password_fun(),
-                  iodata()) ->
+                  ehsa:options()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
-verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
+
+verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
     Params = ehsa_params:parse(Req_Info),
     %% Mandatory params
     {username, Username} = lists:keyfind(username, 1, Params),
@@ -282,15 +208,15 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
                         Computed_Response ->
                             {true, {Username, Password}};
                         _Other ->
-                            unauthorized(false, <<"Invalid response">>, State)
+                            unauthorized(false, <<"Invalid response">>, Options)
                     end;
                 _Other ->
-                    unauthorized(false, <<"Invalid credentials">>, State)
+                    unauthorized(false, <<"Invalid credentials">>, Options)
             end;
         badarg ->
-            unauthorized(false, <<"Invalid NC">>, State);
+            unauthorized(false, <<"Invalid NC">>, Options);
         undefined ->
-            unauthorized(true, <<"Stale nonce">>, State)
+            unauthorized(true, <<"Stale nonce">>, Options)
     end.
 
 %%--------------------------------------------------------------------
@@ -301,7 +227,9 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, State) ->
 -spec verify_nc(binary() | undefined,
                 binary(),
                 binary() | undefined) -> ok | badarg | undefined.
+
 verify_nc(_QOP = undefined, _Nonce, _NC) ->
     ok;
+
 verify_nc(_QOP, Nonce, NC) ->
     ehsa_nc:verify(Nonce, ehsa_binary:to_integer(NC, 16)).
