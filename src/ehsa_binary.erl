@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@users.berlios.de>
-%%% @copyright (C) 2012, Anton Yabchinskiy
 %%% @doc
 %%% Utilities for binary strings.
 %%% @end
+%%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
 -module(ehsa_binary).
 
@@ -21,6 +21,7 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec decode(binary()) -> binary().
+
 decode(Hex) ->
     << <<(case H of
               $0 -> 0;
@@ -54,6 +55,7 @@ decode(Hex) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec encode(binary()) -> binary().
+
 encode(Bin) ->
     << <<(if B >= 10 -> B - 10 + $a; true -> B + $0 end)>> || <<B:4>> <= Bin >>.
 
@@ -63,10 +65,13 @@ encode(Bin) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec join([iodata()], iodata()) -> iodata().
+
 join([], _Sep) ->
     <<>>;
+
 join([H], _Sep) ->
     H;
+
 join([H | T], Sep) ->
     [H, Sep, join(T, Sep)].
 
@@ -76,6 +81,7 @@ join([H | T], Sep) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec to_integer(binary()) -> integer().
+
 to_integer(Str) ->
     list_to_integer(binary_to_list(Str)).
 
@@ -85,6 +91,7 @@ to_integer(Str) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec to_integer(binary(), 2..36) -> integer().
+
 to_integer(Str, Base) ->
     list_to_integer(binary_to_list(Str), Base).
 
@@ -94,6 +101,7 @@ to_integer(Str, Base) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec to_lower(binary()) -> binary().
+
 to_lower(Str) ->
     << <<(case Char of
               $A -> $a;
