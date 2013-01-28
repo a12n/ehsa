@@ -14,7 +14,11 @@ clean:
 	$(REBAR) clean
 
 distclean: clean
+	rm -f doc/*.css doc/*.html doc/*.png doc/edoc-info
 	rm -rf .eunit
+
+doc:
+	$(REBAR) doc
 
 shell:
 	$(ERL) -smp -pa ebin/ -pa deps/*/ebin/
