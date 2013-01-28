@@ -33,7 +33,8 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% be `undefined').
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
-%% either `{ok, Password}' or `undefined' if there is no such user.
+%% either `Password' binary string or `undefined' if there is no such
+%% user.
 %%
 %% `Options' is a list of properties. The available options are:
 %% <dl>
@@ -99,8 +100,8 @@ unauthorized(Options) ->
 verify_info(Req_Info, Pwd_Fun, Options) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of
-        {ok, Password} ->
-            {true, {Username, Password}};
-        _Other ->
-            unauthorized(Options)
+        undefined ->
+            unauthorized(Options);
+        Password ->
+            {true, {Username, Password}}
     end.
