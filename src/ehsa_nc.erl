@@ -193,7 +193,7 @@ verify_2_test_() ->
               timer:sleep(3500),
               undefined = verify(Nonce, 3),
               undefined = verify(Nonce, 2),
-              exit(Pid, kill).
+              exit(Pid, kill)
       end,
       fun() ->
               {ok, Pid} = start_link([{max_nc, 5}]),
@@ -207,7 +207,7 @@ verify_2_test_() ->
               ok = verify(Nonce, 5),
               undefined = verify(Nonce, 6),
               undefined = verify(Nonce, 5),
-              exit(Pid, kill).
+              exit(Pid, kill)
       end ].
 
 -endif.
