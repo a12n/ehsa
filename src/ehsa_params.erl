@@ -1,8 +1,9 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2012-2013, Anton Yabchinskiy <arn@users.berlios.de>
+%%% @author Anton Yabchinskiy <arn@users.berlios.de>
 %%% @doc
 %%% Authentication information parameters handling.
 %%% @end
+%%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
 -module(ehsa_params).
 
