@@ -137,9 +137,9 @@ to_lower(Str) ->
 %%% Tests
 %%%===================================================================
 
--include_lib("eunit/include/eunit.hrl").
-
 -ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
 
 decode_1_test_() ->
     [ ?_test( <<1, 2, 3, 4>> = decode(<<"01020304">>) ),
