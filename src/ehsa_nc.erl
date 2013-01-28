@@ -186,32 +186,32 @@ terminate(_Reason, _State) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-verify_2_test_() ->
-    [ fun() ->
-              {ok, _Pid} = start_link([{nc_ttl, 3}]),
-              Nonce = create(),
-              true = is_binary(Nonce),
-              ok = verify(Nonce, 1),
-              badarg = verify(Nonce, 1),
-              ok = verify(Nonce, 2),
-              timer:sleep(3500),
-              undefined = verify(Nonce, 3),
-              undefined = verify(Nonce, 2),
-              gen_server:cast(?MODULE, stop)
-      end,
-      fun() ->
-              {ok, _Pid} = start_link([{max_nc, 5}]),
-              Nonce = create(),
-              true = is_binary(Nonce),
-              badarg = verify(Nonce, 0),
-              ok = verify(Nonce, 1),
-              ok = verify(Nonce, 2),
-              ok = verify(Nonce, 3),
-              ok = verify(Nonce, 4),
-              ok = verify(Nonce, 5),
-              undefined = verify(Nonce, 6),
-              undefined = verify(Nonce, 5),
-              gen_server:cast(?MODULE, stop)
-      end ].
+ehsa_nc_test_() ->
+    {setup,
+     fun() -> {ok, Pid} = start_link([{max_nc, 5}, {nc_ttl, 3}]), Pid end,
+     fun(Pid) -> gen_server:cast(Pid, stop) end,
+     fun(Pid) ->
+             [ ?_assert( is_binary(create()) ),
+               fun() ->
+                       Nonce = create(),
+                       ?assertEqual(ok, verify(Nonce, 1)),
+                       ?assertEqual(badarg, verify(Nonce, 1)),
+                       ?assertEqual(ok, verify(Nonce, 2)),
+                       timer:sleep(3500),
+                       ?assertEqual(undefined, verify(Nonce, 3)),
+                       ?assertEqual(undefined, verify(Nonce, 2))
+               end,
+               fun() ->
+                       Nonce = create(),
+                       ?assertEqual(badarg, verify(Nonce, 0)),
+                       ?assertEqual(ok, verify(Nonce, 1)),
+                       ?assertEqual(ok, verify(Nonce, 2)),
+                       ?assertEqual(ok, verify(Nonce, 3)),
+                       ?assertEqual(ok, verify(Nonce, 4)),
+                       ?assertEqual(ok, verify(Nonce, 5)),
+                       ?assertEqual(undefined, verify(Nonce, 6)),
+                       ?assertEqual(undefined, verify(Nonce, 5))
+               end ]
+     end}.
 
 -endif.
