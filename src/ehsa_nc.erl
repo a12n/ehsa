@@ -190,8 +190,12 @@ ehsa_nc_test_() ->
     {setup,
      fun() -> {ok, Pid} = start_link([{max_nc, 5}, {nc_ttl, 3}]), Pid end,
      fun(Pid) -> gen_server:cast(Pid, stop) end,
-     fun(_Pid) ->
-             [ ?_assert( is_binary(create()) ),
+     fun(Pid) ->
+             [ ?_assertEqual(child_spec(), child_spec([])),
+               ?_assertEqual(ok, gen_server:call(Pid, abcabcabc)),
+               ?_assertEqual(ok, gen_server:cast(Pid, xyzxyzxyz)),
+               ?_test(Pid ! foofoo),
+               ?_assert(is_binary(create())),
                fun() ->
                        Nonce = create(),
                        ?assertEqual(ok, verify(Nonce, 1)),
