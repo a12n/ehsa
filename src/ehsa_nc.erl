@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@users.berlios.de>
-%%% @copyright (C) 2012, Anton Yabchinskiy
 %%% @doc
 %%% Nonce counter tracking for digest authentication.
 %%% @end
+%%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
 -module(ehsa_nc).
 
@@ -24,7 +24,7 @@
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @doc
+%% @equiv child_spec(_Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec child_spec() -> supervisior:child_spec().
@@ -34,6 +34,16 @@ child_spec() ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Child specification for the supervisior of user's application.
+%%
+%% The available options are:
+%% <dl>
+%% <dt>`{max_nc, N :: pos_integer()}'</dt>
+%% <dd>No more than `N' requests are allowed with the given
+%% nonce.</dd>
+%% <dt>`{nc_ttl, N :: pos_integer()}'</dt>
+%% <dd>Nonce will be invalid after `N' seconds.</dd>
+%% </dl>
 %% @end
 %%--------------------------------------------------------------------
 -spec child_spec(ehsa:options()) -> supervisior:child_spec().
@@ -44,6 +54,9 @@ child_spec(Options) ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Start supervised nonce counting server. For allowed `Options' see
+%% documentation for child_spec/1. The process will be registered as
+%% `{@module}'.
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link(ehsa:options()) -> {ok, pid()} | ignore | {error, term()}.
@@ -57,7 +70,7 @@ start_link(Options) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Create random nonce and insert it into nonce counter tracking
+%% Creates random nonce and inserts it into nonce counter tracking
 %% dictionary.
 %% @end
 %%--------------------------------------------------------------------
@@ -70,6 +83,11 @@ create() ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Checks that client's `NC' value is valid for the given
+%% `Nonce'. Stored value is increased, so next client's valid request
+%% is with `NC + 1'. Returns `ok' if the given `NC' value is valid,
+%% and `badarg' if it's invalid. For a stale nonce which is no longer
+%% valid `undefined' is returned.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify(binary(), integer()) -> ok | badarg | undefined.
@@ -142,8 +160,6 @@ handle_info(_Info, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec init(ehsa:options()) -> {ok, term()} | {stop, term()}.
-
 init(Options) ->
     NCs = dict:new(),
     Max = proplists:get_value(max_nc, Options, 16#ffffffff),
@@ -168,7 +184,7 @@ terminate(_Reason, _State) ->
 
 verify_2_test_() ->
     [ fun() ->
-              {ok, _Pid} = start_link([{nc_ttl, 3}]),
+              {ok, Pid} = start_link([{nc_ttl, 3}]),
               Nonce = create(),
               true = is_binary(Nonce),
               ok = verify(Nonce, 1),
@@ -177,10 +193,10 @@ verify_2_test_() ->
               timer:sleep(3500),
               undefined = verify(Nonce, 3),
               undefined = verify(Nonce, 2),
-              gen_server:cast(?MODULE, stop)
+              exit(Pid, kill).
       end,
       fun() ->
-              {ok, _Pid} = start_link([{max_nc, 5}]),
+              {ok, Pid} = start_link([{max_nc, 5}]),
               Nonce = create(),
               true = is_binary(Nonce),
               badarg = verify(Nonce, 0),
@@ -191,7 +207,7 @@ verify_2_test_() ->
               ok = verify(Nonce, 5),
               undefined = verify(Nonce, 6),
               undefined = verify(Nonce, 5),
-              gen_server:cast(?MODULE, stop)
+              exit(Pid, kill).
       end ].
 
 -endif.
