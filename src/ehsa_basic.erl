@@ -124,50 +124,54 @@ verify_auth_2_test_() ->
       fun() ->
               {false, Res_Header} =
                   verify_auth(<<"xyz">>, fun password/1),
-              <<"Basic realm=\"\"">> = iolist_to_binary(Res_Header)
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end,
       fun() ->
               {false, Res_Header} =
                   verify_auth(<<"Basic ", (base64:encode(<<"root:toor">>))/bytes>>, fun password/1),
-              <<"Basic realm=\"\"">> = iolist_to_binary(Res_Header)
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end,
-      fun() ->
-              {true, {<<"guest">>, <<>>}} =
-                  verify_auth(<<"BaSiC ", (base64:encode(<<"guest:">>))/bytes>>, fun password/1)
-      end,
+      ?_assertMatch(
+         {true, {<<"guest">>, <<>>}},
+         verify_auth(<<"BaSiC ", (base64:encode(<<"guest:">>))/bytes>>, fun password/1)
+        ),
       fun() ->
               Username = <<"xyzzy">>,
               Password = password(Username),
-              {true, {Username, Password}} =
-                  verify_auth(<<"Basic ", (base64:encode(<<Username/bytes, $:, Password/bytes>>))/bytes>>, fun password/1)
+              ?assertMatch(
+                 {true, {Username, Password}},
+                 verify_auth(<<"Basic ", (base64:encode(<<Username/bytes, $:, Password/bytes>>))/bytes>>, fun password/1)
+                )
       end,
       fun() ->
               {false, Res_Header} =
                   verify_auth(<<"Basic ", (base64:encode(<<"adm:321">>))/bytes>>, fun password/1),
-              <<"Basic realm=\"\"">> = iolist_to_binary(Res_Header)
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end,
       fun() ->
               {false, Res_Header} =
                   verify_auth(<<"Digest bad,auth,info">>, fun password/1),
-              <<"Basic realm=\"\"">> = iolist_to_binary(Res_Header)
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end,
       fun() ->
               {false, Res_Header} =
                   verify_auth(undefined, fun password/1),
-              <<"Basic realm=\"\"">> = iolist_to_binary(Res_Header)
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end ].
 
 verify_auth_3_test_() ->
     [ fun() ->
               {false, Res_Header} =
                   verify_auth(<<"Basic ", (base64:encode(<<"a:b">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}]),
-              <<"Basic realm=\"DaRk\"">> = iolist_to_binary(Res_Header)
+              ?assertEqual(<<"Basic realm=\"DaRk\"">>, iolist_to_binary(Res_Header))
       end,
       fun() ->
               Username = <<"admin">>,
               Password = password(Username),
-              {true, {Username, Password}} =
-                  verify_auth(<<"Basic ", (base64:encode(<<"admin:123">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}])
+              ?assertMatch(
+                 {true, {Username, Password}},
+                 verify_auth(<<"Basic ", (base64:encode(<<"admin:123">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}])
+                )
       end ].
 
 -endif.
