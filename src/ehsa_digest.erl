@@ -233,3 +233,40 @@ verify_nc(_QOP = undefined, _Nonce, _NC) ->
 
 verify_nc(_QOP, Nonce, NC) ->
     ehsa_nc:verify(Nonce, ehsa_binary:to_integer(NC, 16)).
+
+%%%===================================================================
+%%% Tests
+%%%===================================================================
+
+-include_lib("eunit/include/eunit.hrl").
+
+-ifdef(TEST).
+
+ehsa_digest_test_() ->
+    {setup,
+     fun() -> {ok, Pid} = ehsa_nc:start_link([]), Pid end,
+     fun(Pid) -> gen_server:cast(Pid, stop) end,
+     fun(_Pid) ->
+             Realm = <<"testrealm@host.com">>,
+             Options = [{realm, Realm}],
+             Password = fun(<<"Mufasa">>) -> <<"Circle Of Life">>;
+                           (<<"Qobb">>) -> <<"Mellon">>;
+                           (_Other) -> undefined end,
+             [ ?_assertMatch(
+                  {true, {<<"Mufasa">>, <<"Circle Of Life">>}},
+                  verify_auth(<<"GET">>,
+                              <<"Digest username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", response=\"670fd8c2df070c60b045671b8b24ff02\"">>,
+                              <<>>,
+                              Password,
+                              Options)
+                 ),
+               ?_assertMatch(
+                  {false, _Res_Header},
+                  verify_auth(<<"GET">>,
+                              <<"Digest username=\"Mafaza\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, nc=00000002, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"">>,
+                              <<>>,
+                              Password)
+                 ) ]
+     end}.
+
+-endif.
