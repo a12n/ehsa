@@ -1,6 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @author Anton Yabchinskiy <arn@users.berlios.de>
-%%% @copyright (C) 2012, Anton Yabchinskiy
+%%% @copyright (C) 2012-2013, Anton Yabchinskiy <arn@users.berlios.de>
 %%% @doc
 %%% Authentication information parameters handling.
 %%% @end
@@ -16,22 +15,27 @@
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Formats list of authentication parameters.
 %% @end
 %%--------------------------------------------------------------------
 -spec format([{atom(), iodata()}]) -> iodata().
+
 format([]) ->
     [];
+
 format([{Key, Value}]) ->
     format(Key, Value);
+
 format([{Key, Value} | Other]) ->
     [format(Key, Value), <<", ">>, format(Other)].
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Some auth parameter values must be quoted.
+%% Formats single authentication parameter.
 %% @end
 %%--------------------------------------------------------------------
 -spec format(atom(), iodata()) -> iodata().
+
 format(Key, Value)
   when Key =:= cnonce;
        Key =:= comment;
@@ -44,14 +48,18 @@ format(Key, Value)
        Key =:= uri;
        Key =:= username ->
     [atom_to_binary(Key, latin1), <<"=\"">>, Value, <<"\"">>];
+
 format(Key, Value) ->
     [atom_to_binary(Key, latin1), <<"=">>, Value].
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Parses authentication parameters string. The result is key-value
+%% pairs of the parameters.
 %% @end
 %%--------------------------------------------------------------------
 -spec parse(binary()) -> [{atom(), binary()}].
+
 parse(Str) ->
     [_ | _] = ehsa_params_parser:parse(Str).
 
