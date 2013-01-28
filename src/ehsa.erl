@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@users.berlios.de>
-%%% @copyright (C) 2012, Anton Yabchinskiy
 %%% @doc
-%%%
+%%% Denominative module of the project. Mainly a namespace for types.
 %%% @end
+%%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
 -module(ehsa).
 
@@ -14,20 +14,11 @@
 %%% Types
 %%%===================================================================
 
-%%--------------------------------------------------------------------
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--type credentials() :: {binary(), binary()}.
+-type credentials() :: {_Username :: binary(),
+                        _Password :: binary()}.
 
-%%--------------------------------------------------------------------
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--type options() :: [{atom(), term()}].
+-type options() :: [{_Key :: atom(), _Val :: term()}].
 
-%%--------------------------------------------------------------------
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--type password_fun() :: fun((binary()) -> {ok, binary()} | undefined).
+-type password_fun() :: fun((_Username :: binary()) ->
+                                   {ok, _Password :: binary()} |
+                                   undefined).
