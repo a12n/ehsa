@@ -32,7 +32,7 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% Verify digest authentication of HTTP request.
 %%
 %% Request's `Method' could be either atom (e.g. `'GET'') or binary
-%% (e.g. <<"POST">>).
+%% (e.g. `<<"POST">>').
 %%
 %% `Req_Header' is value of "Authorization" header from client (it may
 %% be `undefined').
