@@ -47,7 +47,7 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% Function returns either `{true, Authorized :: credentials()}' if
 %% authentication information is valid, or `{false, Res_Header ::
 %% iodata()}'. Returned `Res_Header' must be used as a value for
-%% 'WWW-Authenticate' header of the response.
+%% "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(binary() | undefined,
