@@ -196,7 +196,9 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
         ok ->
             %% Check response
             case Pwd_Fun(Username) of
-                {ok, Password} ->
+                undefined ->
+                    unauthorized(false, <<"Invalid credentials">>, Options);
+                Password ->
                     Computed_Response =
                         response(QOP,
                                  ha1(Username, Realm, Password),
@@ -209,9 +211,7 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                             {true, {Username, Password}};
                         _Other ->
                             unauthorized(false, <<"Invalid response">>, Options)
-                    end;
-                _Other ->
-                    unauthorized(false, <<"Invalid credentials">>, Options)
+                    end
             end;
         badarg ->
             unauthorized(false, <<"Invalid NC">>, Options);
