@@ -1,11 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@users.berlios.de>
-%%% @copyright (C) 2012, Anton Yabchinskiy
 %%% @doc
-%%%
+%%% Digest authentication handling.
 %%% @end
-%%% @todo Body streaming.
-%%% @todo Variant without integrity protection.
+%%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
 -module(ehsa_digest).
 
@@ -238,9 +236,9 @@ verify_nc(_QOP, Nonce, NC) ->
 %%% Tests
 %%%===================================================================
 
--include_lib("eunit/include/eunit.hrl").
-
 -ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
 
 ehsa_digest_test_() ->
     {setup,
