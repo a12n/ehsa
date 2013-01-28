@@ -31,8 +31,8 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% @doc
 %% Verify digest authentication of HTTP request.
 %%
-%% Request's `Method' could be either atom (e.g. `'GET'') or binary
-%% (e.g. `<<"POST">>').
+%% Request's `Method' could be either atom (e.g. <code>'GET'</code>)
+%% or binary (e.g. `<<"POST">>').
 %%
 %% `Req_Header' is value of "Authorization" header from client (it may
 %% be `undefined').
@@ -50,7 +50,9 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% Unauthorized" responses. If unspecified, it's considered to be empty
 %% string.</dd>
 %% <dt>`{domain, Domain :: [binary()]}'</dt>
-%% <dd>List of URIs that define protection space (see RFC 2617).</dd>
+%% <dd>List of URIs that define protection space (see
+%% [http://tools.ietf.org/html/rfc2617#section-3.2.1]). It's empty
+%% list by default.</dd>
 %% </dl>
 %%
 %% Function returns either `{true, Authorized :: credentials()}' if
