@@ -1,5 +1,5 @@
 
-.PHONY: all app clean distclean shell test
+.PHONY: all app clean distclean doc shell test
 
 ERL ?= erl
 REBAR ?= ./rebar
