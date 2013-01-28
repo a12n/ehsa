@@ -15,7 +15,7 @@
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @doc
+%% @equiv verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
@@ -29,6 +29,34 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Verify digest authentication of HTTP request.
+%%
+%% Request's `Method' could be either atom (e.g. `'GET'') or binary
+%% (e.g. <<"POST">>).
+%%
+%% `Req_Header' is value of "Authorization" header from client (it may
+%% be `undefined').
+%%
+%% Request's body `Req_Body' is used to check the integrity of request's content.
+%%
+%% `Pwd_Fun' is a function which, for a given user name, must return
+%% either `Password' binary string or `undefined' if there is no such
+%% user.
+%%
+%% The available `Options' are:
+%% <dl>
+%% <dt>`{realm, Realm :: binary()}'</dt>
+%% <dd>Binary string `Realm' will be used for realm in "401
+%% Unauthorized" responses. If unspecified, it's considered to be empty
+%% string.</dd>
+%% <dt>`{domain, Domain :: [binary()]}'</dt>
+%% <dd>List of URIs that define protection space (see RFC 2617).</dd>
+%% </dl>
+%%
+%% Function returns either `{true, Authorized :: credentials()}' if
+%% authentication information is valid, or `{false, Res_Header ::
+%% iodata()}'. Returned `Res_Header' must be used as a value for
+%% 'WWW-Authenticate' header of the response.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
