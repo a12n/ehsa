@@ -190,7 +190,7 @@ ehsa_nc_test_() ->
     {setup,
      fun() -> {ok, Pid} = start_link([{max_nc, 5}, {nc_ttl, 3}]), Pid end,
      fun(Pid) -> gen_server:cast(Pid, stop) end,
-     fun(Pid) ->
+     fun(_Pid) ->
              [ ?_assert( is_binary(create()) ),
                fun() ->
                        Nonce = create(),
