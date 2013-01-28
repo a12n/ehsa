@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@users.berlios.de>
-%%% @copyright (C) 2012, Anton Yabchinskiy
 %%% @doc
-%%%
+%%% Basic authentication handling.
 %%% @end
+%%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
 -module(ehsa_basic).
 
@@ -15,7 +15,7 @@
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @doc
+%% @equiv verify_auth(Req_Header, Pwd_Fun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(binary() | undefined,
@@ -27,6 +27,26 @@ verify_auth(Req_Header, Pwd_Fun) ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Verify basic authentication of HTTP request.
+%%
+%% `Req_Header' is value of "Authorization" header from client (it may
+%% be `undefined').
+%%
+%% `Pwd_Fun' is a function which, for a given user name, must return
+%% either `{ok, Password}' or `undefined' if there is no such user.
+%%
+%% `Options' is a list of properties. The available options are:
+%% <dl>
+%% <dt>`{realm, Realm :: binary()}'</dt>
+%% <dd>Binary string `Realm' will be used for realm in "401
+%% Unauthorized" responses. If unspecified, it's considered to be empty
+%% string.</dd>
+%% </dl>
+%%
+%% Function returns either `{true, Authorized :: credentials()}' if
+%% authentication information is valid, or `{false, Res_Header ::
+%% iodata()}'. Returned `Res_Header' must be used as a value for
+%% 'WWW-Authenticate' header of the response.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(binary() | undefined,
