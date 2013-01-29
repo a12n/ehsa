@@ -1,5 +1,6 @@
 ^.eunit/
 ^deps/
 ^ebin/
+^example/deps/
+^example/ebin/
 ^rebar$
-^tmp/
