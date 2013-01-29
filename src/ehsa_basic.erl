@@ -100,10 +100,10 @@ unauthorized(Options) ->
 verify_info(Req_Info, Pwd_Fun, Options) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of
-        undefined ->
-            unauthorized(Options);
         Password ->
-            {true, {Username, Password}}
+            {true, {Username, Password}};
+        _Other ->
+            unauthorized(Options)
     end.
 
 %%%===================================================================
