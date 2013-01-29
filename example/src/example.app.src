@@ -1,0 +1,12 @@
+%% -*- mode: erlang -*-
+
+{application, example,
+ [ {description, "Example application using EHSA"},
+   {vsn, "1"},
+   {registered, []},
+   {applications, [ cowboy,
+                    ehsa,
+                    kernel,
+                    stdlib ]},
+   {mod, { example_app, []}},
+   {env, []} ]}.
