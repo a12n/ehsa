@@ -8,7 +8,8 @@
 -module(ehsa_digest).
 
 %% API
--export([verify_auth/4, verify_auth/5]).
+-export([verify_auth/3, verify_auth/4, verify_auth_int/4,
+         verify_auth_int/5]).
 
 %%%===================================================================
 %%% API
@@ -20,12 +21,37 @@
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
                   binary() | undefined,
-                  iodata(),
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
 
-verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
-    verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, []).
+verify_auth(Method, Req_Header, Pwd_Fun) ->
+    verify_auth(Method, Req_Header, Pwd_Fun, []).
+
+%%--------------------------------------------------------------------
+%% @equiv verify_auth_int(Method, Req_Header, _Req_Body = undefined, Pwd_Fun, Options)
+%% @end
+%%--------------------------------------------------------------------
+-spec verify_auth(atom() | binary(),
+                  binary() | undefined,
+                  ehsa:password_fun(),
+                  ehsa:options()) ->
+                         {true, ehsa:credentials()} | {false, iodata()}.
+
+verify_auth(Method, Req_Header, Pwd_Fun, Options) ->
+    verify_auth_int(Method, Req_Header, undefined, Pwd_Fun, Options).
+
+%%--------------------------------------------------------------------
+%% @equiv verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, _Options = [])
+%% @end
+%%--------------------------------------------------------------------
+-spec verify_auth_int(atom() | binary(),
+                      binary() | undefined,
+                      iodata() | undefined,
+                      ehsa:password_fun()) ->
+                             {true, ehsa:credentials()} | {false, iodata()}.
+
+verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
+    verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -37,7 +63,9 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% `Req_Header' is value of "Authorization" header from client (it may
 %% be `undefined').
 %%
-%% Request's body `Req_Body' is used to check the integrity of request's content.
+%% Request's body `Req_Body' is used to check content's integrity. If
+%% it's `undefined' integrity will not be checked, and server
+%% responses will not signal a support for it.
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
 %% either `Password' binary string or `undefined' if there is no such
@@ -61,30 +89,33 @@ verify_auth(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
--spec verify_auth(atom() | binary(),
-                  binary() | undefined,
-                  iodata(),
-                  ehsa:password_fun(),
-                  ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+-spec verify_auth_int(atom() | binary(),
+                      binary() | undefined,
+                      iodata() | undefined,
+                      ehsa:password_fun(),
+                      ehsa:options()) ->
+                             {true, ehsa:credentials()} | {false, iodata()}.
 
-verify_auth(Method, undefined, Req_Body, Pwd_Fun, Options) ->
-    verify_auth(Method, <<>>, Req_Body, Pwd_Fun, Options);
+verify_auth_int(Method, undefined, Req_Body, Pwd_Fun, Options) ->
+    verify_auth_int(Method, <<>>, Req_Body, Pwd_Fun, Options);
 
-verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_atom(Method) ->
-    verify_auth(atom_to_binary(Method, latin1), Req_Header, Req_Body, Pwd_Fun, Options);
+verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_atom(Method) ->
+    verify_auth_int(atom_to_binary(Method, latin1), Req_Header, Req_Body, Pwd_Fun, Options);
 
-verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, Options) ->
+verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) ->
+    Int = (Req_Body =/= undefined),
     case binary:split(Req_Header, <<$ >>) of
         [Scheme, Req_Info] ->
             case ehsa_binary:to_lower(Scheme) of
                 <<"digest">> ->
                     verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options);
                 _Other ->
-                    unauthorized(false, <<"Invalid auth scheme">>, Options)
+                    %% Invalid auth scheme
+                    unauthorized(false, Int, Options)
             end;
         _Other ->
-            unauthorized(false, <<"Invalid/missing auth information">>, Options)
+            %% Invalid/missing auth information
+            unauthorized(false, Int, Options)
     end.
 
 %%%===================================================================
@@ -111,9 +142,10 @@ ha1(Username, Realm, Password) ->
 -spec ha2(binary() | undefined,
           binary(),
           binary(),
-          iodata()) -> binary().
+          iodata() | undefined) -> binary().
 
-ha2(_QOP = <<"auth-int">>, Method, URI, Req_Body) ->
+ha2(_QOP = <<"auth-int">>, Method, URI, Req_Body)
+  when Req_Body =/= undefined ->
     md5([Method, $:, URI, $:, md5(Req_Body)]);
 
 ha2(QOP, Method, URI, _Req_Body)
@@ -157,10 +189,10 @@ response(QOP, HA1, Nonce, NC, CNonce, HA2)
 %% @end
 %%--------------------------------------------------------------------
 -spec unauthorized(boolean(),
-                   iodata(),
+                   boolean(),
                    ehsa:options()) -> {false, iodata()}.
 
-unauthorized(Stale, _Comment, Options) ->
+unauthorized(Stale, Int, Options) ->
     Domain = proplists:get_value(domain, Options, []),
     Nonce = ehsa_nc:create(),
     Realm = proplists:get_value(realm, Options, <<>>),
@@ -168,11 +200,14 @@ unauthorized(Stale, _Comment, Options) ->
         [ <<"Digest ">>,
           ehsa_params:format(realm, Realm),
           <<", ">>,
-          ehsa_params:format(qop, <<"auth,auth-int">>),
+          ehsa_params:format(qop, case Int of
+                                      true ->
+                                          <<"auth,auth-int">>;
+                                      false ->
+                                          <<"auth">>
+                                  end),
           <<", ">>,
           ehsa_params:format(nonce, Nonce),
-          %% <<", ">>,
-          %% ehsa_params:format(comment, _Comment),
           case Domain of
               [_H | _T] ->
                   [ <<", ">>,
@@ -196,12 +231,13 @@ unauthorized(Stale, _Comment, Options) ->
 %%--------------------------------------------------------------------
 -spec verify_info(binary(),
                   binary(),
-                  iodata(),
+                  iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
 
 verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
+    Int = (Req_Body =/= undefined),
     Params = ehsa_params:parse(Req_Info),
     %% Mandatory params
     {username, Username} = lists:keyfind(username, 1, Params),
@@ -215,17 +251,26 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
     NC = proplists:get_value(nc, Params),
     QOP = proplists:get_value(qop, Params),
     %% Check optional params
-    true = (Algorithm =:= <<"MD5">>),
-    true = ((QOP =:= undefined) or (((QOP =:= <<"auth">>) or
-                                     (QOP =:= <<"auth-int">>)) and
-                                    (CNonce =/= undefined) and (NC =/= undefined))),
+    case Algorithm of
+        <<"MD5">> ->
+            ok
+    end,
+    case {QOP, (CNonce =/= undefined) and (NC =/= undefined)} of
+        {undefined, _} ->
+            ok;
+        {<<"auth">>, true} ->
+            ok;
+        {<<"auth-int">>, true} when Int ->
+            ok
+    end,
     %% Check NC
     case verify_nc(QOP, Nonce, NC) of
         ok ->
             %% Check response
             case Pwd_Fun(Username) of
                 undefined ->
-                    unauthorized(false, <<"Invalid credentials">>, Options);
+                    %% Invalid credentials
+                    unauthorized(false, Int, Options);
                 Password ->
                     Computed_Response =
                         response(QOP,
@@ -238,13 +283,16 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                         Computed_Response ->
                             {true, {Username, Password}};
                         _Other ->
-                            unauthorized(false, <<"Invalid response">>, Options)
+                            %% Invalid response
+                            unauthorized(false, Int, Options)
                     end
             end;
         badarg ->
-            unauthorized(false, <<"Invalid NC">>, Options);
+            %% Invalid NC
+            unauthorized(false, Int, Options);
         undefined ->
-            unauthorized(true, <<"Stale nonce">>, Options)
+            %% Stale nonce
+            unauthorized(true, Int, Options)
     end.
 
 %%--------------------------------------------------------------------
@@ -284,7 +332,6 @@ ehsa_digest_test_() ->
                   {true, {<<"Mufasa">>, <<"Circle Of Life">>}},
                   verify_auth(<<"GET">>,
                               <<"Digest username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", response=\"670fd8c2df070c60b045671b8b24ff02\"">>,
-                              <<>>,
                               Password,
                               Options)
                  ),
@@ -292,7 +339,6 @@ ehsa_digest_test_() ->
                   {false, _Res_Header},
                   verify_auth(<<"GET">>,
                               <<"Digest username=\"Mafaza\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, nc=00000002, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"">>,
-                              <<>>,
                               Password)
                  ) ]
      end}.
