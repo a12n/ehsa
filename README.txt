@@ -1,6 +1,3 @@
-@author Anton Yabchinskiy <arn@users.berlios.de>
-@title Erlang HTTP server authentication
-@doc
 Erlang HTTP server authentication modules. Standard basic and digest
 authentication schemes are implemented. Integrity protection is
 supported for the digest scheme. The modules are mainly useful with
