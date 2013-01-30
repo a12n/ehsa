@@ -34,7 +34,13 @@ content_types_provided(Req, State) ->
 is_authorized(Req, State) ->
     {Method, Req_1} = cowboy_http_req:method(Req),
     {Authorization, Req_2} = cowboy_http_req:header('Authorization', Req_1),
-    {ok, Body, Req_3} = cowboy_http_req:body(Req_2),
+    {Body, Req_3} =
+        case cowboy_http_req:body(Req_2) of
+            {ok, _1, _2} ->
+                {_1, _2};
+            {error, badarg} ->
+                {<<>>, Req_2}
+        end,
     case ehsa_digest:verify_auth_int(Method, Authorization, Body, fun example_common:password/1) of
         {true, {Username, _Password}} ->
             {true, Req_3, _State = Username};
