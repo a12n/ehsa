@@ -39,7 +39,6 @@ format([{Key, Value} | Other]) ->
 
 format(Key, Value)
   when Key =:= cnonce;
-       Key =:= comment;
        Key =:= domain;
        Key =:= nonce;
        Key =:= opaque;
