@@ -110,9 +110,9 @@ verify_info(Req_Info, Pwd_Fun, Options) ->
 %%% Tests
 %%%===================================================================
 
--include_lib("eunit/include/eunit.hrl").
-
 -ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
 
 password(<<"admin">>) -> <<"123">>;
 password(<<"guest">>) -> <<>>;
