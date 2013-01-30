@@ -68,9 +68,9 @@ parse(Str) ->
 %%% Tests
 %%%===================================================================
 
--include_lib("eunit/include/eunit.hrl").
-
 -ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
 
 format_1_test_() ->
     [ ?_test( <<>> = iolist_to_binary(format([])) ),
