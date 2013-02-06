@@ -20,7 +20,7 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
-                  binary() | undefined,
+                  iodata() | undefined,
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
 
@@ -32,7 +32,7 @@ verify_auth(Method, Req_Header, Pwd_Fun) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
-                  binary() | undefined,
+                  iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
@@ -45,7 +45,7 @@ verify_auth(Method, Req_Header, Pwd_Fun, Options) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth_int(atom() | binary(),
-                      binary() | undefined,
+                      iodata() | undefined,
                       iodata() | undefined,
                       ehsa:password_fun()) ->
                              {true, ehsa:credentials()} | {false, iodata()}.
@@ -90,7 +90,7 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth_int(atom() | binary(),
-                      binary() | undefined,
+                      iodata() | undefined,
                       iodata() | undefined,
                       ehsa:password_fun(),
                       ehsa:options()) ->
@@ -98,6 +98,9 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 
 verify_auth_int(Method, undefined, Req_Body, Pwd_Fun, Options) ->
     verify_auth_int(Method, <<>>, Req_Body, Pwd_Fun, Options);
+
+verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_list(Req_Header) ->
+    verify_auth_int(Method, iolist_to_binary(Req_Header), Req_Body, Pwd_Fun, Options);
 
 verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_atom(Method) ->
     verify_auth_int(atom_to_binary(Method, latin1), Req_Header, Req_Body, Pwd_Fun, Options);
