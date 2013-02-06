@@ -18,7 +18,7 @@
 %% @equiv verify_auth(Req_Header, Pwd_Fun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
--spec verify_auth(binary() | undefined,
+-spec verify_auth(iodata() | undefined,
                   ehsa:password_fun()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
 
@@ -50,13 +50,16 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
--spec verify_auth(binary() | undefined,
+-spec verify_auth(iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
                          {true, ehsa:credentials()} | {false, iodata()}.
 
 verify_auth(undefined, Pwd_Fun, Options) ->
     verify_auth(<<>>, Pwd_Fun, Options);
+
+verify_auth(Req_Header, Pwd_Fun, Options) when is_list(Req_Header) ->
+    verify_auth(iolist_to_binary(Req_Header), Pwd_Fun, Options);
 
 verify_auth(Req_Header, Pwd_Fun, Options) ->
     case binary:split(Req_Header, <<$ >>) of
