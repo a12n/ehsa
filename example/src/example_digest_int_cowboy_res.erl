@@ -1,4 +1,4 @@
--module(example_digest_int_res).
+-module(example_digest_int_cowboy_res).
 
 -behaviour(cowboy_http_handler).
 

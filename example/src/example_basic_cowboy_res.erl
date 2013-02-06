@@ -1,4 +1,4 @@
--module(example_basic_res).
+-module(example_basic_cowboy_res).
 
 -behaviour(cowboy_http_handler).
 

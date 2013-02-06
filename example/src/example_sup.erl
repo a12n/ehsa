@@ -26,9 +26,9 @@ init([]) ->
                                [{ip, {127,0,0,1}},
                                 {port, 8000}],
                                cowboy_http_protocol,
-                               [{dispatch, [{'_', [ {[<<"basic">>], example_basic_res, []},
-                                                    {[<<"digest">>], example_digest_res, []},
-                                                    {[<<"digest_int">>], example_digest_int_res, []} ]}]}]),
+                               [{dispatch, [{'_', [ {[<<"basic">>], example_basic_cowboy_res, []},
+                                                    {[<<"digest">>], example_digest_cowboy_res, []},
+                                                    {[<<"digest_int">>], example_digest_int_cowboy_res, []} ]}]}]),
     
     %% NC server must be running for ehsa_digest to work.
     EHSA_NC = ehsa_nc:child_spec([{max_nc, 5},
