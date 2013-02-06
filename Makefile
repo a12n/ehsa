@@ -20,6 +20,9 @@ distclean: clean
 doc:
 	$(REBAR) doc
 
+rebar:
+	wget "http://cloud.github.com/downloads/basho/rebar/rebar" -O $@ && chmod u+x $@
+
 shell:
 	$(ERL) -smp -pa ebin/ -pa deps/*/ebin/
 
