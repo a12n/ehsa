@@ -29,9 +29,18 @@ init([]) ->
                                [{dispatch, [{'_', [ {[<<"basic">>], example_basic_cowboy_res, []},
                                                     {[<<"digest">>], example_digest_cowboy_res, []},
                                                     {[<<"digest_int">>], example_digest_int_cowboy_res, []} ]}]}]),
-    
+
+    Webmachine_Args = [ {ip, "127.0.0.1"},
+                        {port, 8001},
+                        {dispatch, [ {["basic"], example_basic_webmachine_res, []},
+                                     {["digest"], example_digest_webmachine_res, []},
+                                     {["digest_int"], example_digest_int_webmachine_res, []} ]} ],
+    Webmachine = {webmachine_mochiweb,
+                  {webmachine_mochiweb, start, [Webmachine_Args]},
+                  permanent, 5000, worker, dynamic},
+
     %% NC server must be running for ehsa_digest to work.
     EHSA_NC = ehsa_nc:child_spec([{max_nc, 5},
                                   {nc_ttl, 30}]),
-    
-    {ok, { {one_for_one, 5, 10}, [Cowboy, EHSA_NC]} }.
+
+    {ok, { {one_for_one, 5, 10}, [Cowboy, Webmachine, EHSA_NC]} }.
