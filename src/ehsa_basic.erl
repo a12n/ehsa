@@ -160,6 +160,13 @@ verify_auth_2_test_() ->
               {false, Res_Header} =
                   verify_auth(undefined, fun password/1),
               ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+      end,
+      fun() ->
+              Username = <<"admin">>,
+              Password = password(Username),
+              {true, {Username, Password}} =
+                  verify_auth(["Basic ", base64:encode(<<Username/bytes, $:, Password/bytes>>)],
+                              fun password/1)
       end ].
 
 verify_auth_3_test_() ->
