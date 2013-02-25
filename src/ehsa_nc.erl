@@ -113,25 +113,26 @@ code_change(_Old_Vsn, State, _Extra) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
-handle_call({insert, Nonce}, _From, _State = {NCs, Max, TTL}) ->
-    error = dict:find(Nonce, NCs),
-    Next_NCs = dict:update_counter(Nonce, 1, NCs),
+handle_call({insert, Nonce}, _From, State = {NCs, _Max, TTL}) ->
+    true = ets:insert_new(NCs, {Nonce, 1}),
     erlang:send_after(TTL, self(), {delete, Nonce}),
-    {reply, ok, {Next_NCs, Max, TTL}};
+    {reply, ok, State};
 
-handle_call({verify, Nonce, NC}, _From, _State = {NCs, Max, TTL}) ->
-    {Reply, Next_NCs} =
-        case dict:find(Nonce, NCs) of
-            {ok, Value} when Value > Max ->
-                {undefined, dict:erase(Nonce, NCs)};
-            {ok, Value} when Value =:= NC ->
-                {ok, dict:update_counter(Nonce, 1, NCs)};
-            {ok, _Other} ->
-                {badarg, NCs};
-            error ->
-                {undefined, NCs}
+handle_call({verify, Nonce, NC}, _From, State = {NCs, Max, _TTL}) ->
+    Reply =
+        case ets:update_counter(NCs, Nonce, 1) of
+            badarg ->
+                %% Invalid nonce
+                undefined;
+            Value when (Value - 1) > Max ->
+                %% Stale nonce
+                ets:delete(NCs, Nonce),
+                badarg;
+            Value when (Value - 1) =:= NC ->
+                %% Valid nonce and counter
+                ok
         end,
-    {reply, Reply, {Next_NCs, Max, TTL}};
+    {reply, Reply, State};
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -152,9 +153,9 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
-handle_info({delete, Nonce}, _State = {NCs, Max, TTL}) ->
-    Next_NCs = dict:erase(Nonce, NCs),
-    {noreply, {Next_NCs, Max, TTL}};
+handle_info({delete, Nonce}, State = {NCs, _Max, _TTL}) ->
+    ets:delete(NCs, Nonce),
+    {noreply, State};
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -165,7 +166,7 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 init(Options) ->
-    NCs = dict:new(),
+    NCs = ets:new(?MODULE, [private]),
     Max = proplists:get_value(max_nc, Options, 16#ffffffff),
     TTL = proplists:get_value(nc_ttl, Options, 300),
     {ok, {NCs, Max, 1000 * TTL}}.
@@ -175,7 +176,8 @@ init(Options) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
+terminate(_Reason, _State = {NCs, _Max, _TTL}) ->
+    ets:delete(NCs),
     ok.
 
 %%%===================================================================
