@@ -42,7 +42,7 @@ child_spec() ->
 %% <dd>No more than `N' requests are allowed with the given
 %% nonce. Default value is `16#ffffffff'.</dd>
 %% <dt>`{nc_ttl, N :: pos_integer()}'</dt>
-%% <dd>Nonce will be invalid after `N' seconds. Default value is 30
+%% <dd>Nonce will be invalid after `N' seconds. Default value is 60
 %% seconds.</dd>
 %% </dl>
 %% @end
@@ -167,7 +167,7 @@ handle_info(_Info, State) ->
 init(Options) ->
     NCs = dict:new(),
     Max = proplists:get_value(max_nc, Options, 16#ffffffff),
-    TTL = proplists:get_value(nc_ttl, Options, 300),
+    TTL = proplists:get_value(nc_ttl, Options, 60),
     {ok, {NCs, Max, 1000 * TTL}}.
 
 %%--------------------------------------------------------------------
