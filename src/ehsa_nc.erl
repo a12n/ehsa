@@ -120,13 +120,14 @@ handle_call({insert, Nonce}, _From, State = {NCs, _Max, TTL}) ->
 
 handle_call({verify, Nonce, NC}, _From, State = {NCs, Max, _TTL}) ->
     Reply =
-        try ets:update_counter(NCs, Nonce, 1) of
-            Value when (Value - 1) > Max ->
+        try ets:lookup_element(NCs, Nonce, 2) of
+            Value when Value > Max ->
                 %% Stale nonce
                 ets:delete(NCs, Nonce),
-                badarg;
-            Value when (Value - 1) =:= NC ->
+                undefined;
+            Value when Value =:= NC ->
                 %% Valid nonce and counter
+                ets:update_counter(NCs, Nonce, 1),
                 ok;
             _Other ->
                 %% Invalid NC
