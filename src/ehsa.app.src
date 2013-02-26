@@ -2,6 +2,6 @@
 
 {application, ehsa,
  [{description, "Erlang HTTP server authentication handling"},
-  {vsn, "0.4.2"},
+  {vsn, "0.4.5"},
   {modules, []},
   {applications, [kernel, stdlib]}]}.
