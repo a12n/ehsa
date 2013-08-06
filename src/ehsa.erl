@@ -16,7 +16,7 @@
 
 -type username() :: binary().
 
--type password() :: {digest, _Digest :: binary()} | _Clear :: binary().
+-type password() :: {digest, _Digest :: binary()} | binary().
 
 -type credentials() :: {username(), password()}.
 
