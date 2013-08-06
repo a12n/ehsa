@@ -81,8 +81,14 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% responses will not signal a support for it.
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
-%% either `Password' binary string or `undefined' if there is no such
-%% user.
+%% `undefined' if there is no such user, or one of the following:
+%% <dl>
+%% <dt>`Password'</dt>
+%% <dd>Cleartext password as binary string.</dd>
+%% <dt>`{digest, Digest}'</dt>
+%% <dd>Where `Digest' is computed as `ehsa_digest:ha1(Username, Realm,
+%% Password)'. It's hex-encoded lower case binary string.</dd>
+%% </dl>
 %%
 %% The available `Options' are:
 %% <dl>
@@ -276,9 +282,16 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                     %% Invalid credentials
                     unauthorized(false, Int, Options);
                 Password ->
+                    HA1 =
+                        case Password of
+                            {digest, Digest} ->
+                                Digest;
+                            _Clear ->
+                                ha1(Username, Realm, Password)
+                        end,
                     Computed_Response =
                         response(QOP,
-                                 ha1(Username, Realm, Password),
+                                 HA1,
                                  Nonce,
                                  NC,
                                  CNonce,
