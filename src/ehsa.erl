@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @author Anton Yabchinskiy <arn@users.berlios.de>
+%%% @author Anton Yabchinskiy <arn@bestmx.ru>
 %%% @doc
 %%% Denominative module of the project. Mainly a namespace for types.
 %%% @end

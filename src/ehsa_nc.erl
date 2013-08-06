@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @author Anton Yabchinskiy <arn@users.berlios.de>
+%%% @author Anton Yabchinskiy <arn@bestmx.ru>
 %%% @doc
 %%% Nonce counter tracking for digest authentication.
 %%% @end

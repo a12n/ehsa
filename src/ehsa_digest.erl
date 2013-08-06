@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @author Anton Yabchinskiy <arn@users.berlios.de>
+%%% @author Anton Yabchinskiy <arn@bestmx.ru>
 %%% @doc
 %%% Digest authentication handling.
 %%% @end
