@@ -33,8 +33,14 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% be `undefined').
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
-%% either `Password' binary string or `undefined' if there is no such
-%% user.
+%% `undefined' if there is no such user, or one of the following:
+%% <dl>
+%% <dt>`Password'</dt>
+%% <dd>Cleartext password as binary string.</dd>
+%% <dt>`{digest, Digest}'</dt>
+%% <dd>Where `Digest' is computed as `ehsa_digest:ha1(Username, Realm,
+%% Password)'. It's hex-encoded lower case binary string.</dd>
+%% </dl>
 %%
 %% `Options' is a list of properties. The available options are:
 %% <dl>
@@ -103,9 +109,17 @@ unauthorized(Options) ->
 verify_info(Req_Info, Pwd_Fun, Options) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of
+        {digest, Digest} ->
+            Realm = proplists:get_value(realm, Options, <<>>),
+            case ehsa_digest:ha1(Username, Realm, Password) of
+                Digest ->
+                    {true, {Username, {digest, Digest}}};
+                _Other ->
+                    unauthorized(Options)
+            end;
         Password ->
             {true, {Username, Password}};
-        _Other ->
+        undefined ->
             unauthorized(Options)
     end.
 
@@ -117,7 +131,7 @@ verify_info(Req_Info, Pwd_Fun, Options) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-password(<<"admin">>) -> <<"123">>;
+password(<<"admin">>) -> {digest, ehsa_digest:ha1(<<"admin">>, <<"DaRk">>, <<"123">>)};
 password(<<"guest">>) -> <<>>;
 password(<<"xyzzy">>) -> <<"1,.:235asd\/">>;
 password(_Other) -> undefined.
@@ -163,10 +177,10 @@ verify_auth_2_test_() ->
       end,
       fun() ->
               Username = <<"admin">>,
-              Password = password(Username),
-              {true, {Username, Password}} =
-                  verify_auth(["Basic ", base64:encode(<<Username/bytes, $:, Password/bytes>>)],
-                              fun password/1)
+              {false, Res_Header} =
+                  verify_auth(["Basic ", base64:encode(<<Username/bytes, $:, "123">>)],
+                              fun password/1),
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end ].
 
 verify_auth_3_test_() ->
