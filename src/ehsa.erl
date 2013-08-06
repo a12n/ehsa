@@ -14,10 +14,13 @@
 %%% Types
 %%%===================================================================
 
--type credentials() :: {_Username :: binary(),
-                        _Password :: binary()}.
+-type username() :: binary().
+
+-type password() :: {digest, _Digest :: binary()} | _Clear :: binary().
+
+-type credentials() :: {username(), password()}.
 
 -type options() :: [{_Key :: atom(), _Val :: term()}].
 
 -type password_fun() :: fun((_Username :: binary()) ->
-                                   _Password :: binary() | undefined).
+                                   password() | undefined).
