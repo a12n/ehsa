@@ -8,7 +8,7 @@
 -module(ehsa_digest).
 
 %% API
--export([md5/1, verify_auth/3, verify_auth/4, verify_auth_int/4,
+-export([ha1/3, verify_auth/3, verify_auth/4, verify_auth_int/4,
          verify_auth_int/5]).
 
 %%%===================================================================
@@ -17,14 +17,16 @@
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Computes MD5 hash digest of `Data'. Result is hex-encoded binary
-%% string.
+%% Computes `md5([Username, $:, Realm, $:, Password])'. Result is
+%% hex-encoded lower case binary string.
 %% @end
 %%--------------------------------------------------------------------
--spec md5(iodata()) -> binary().
+-spec ha1(binary(),
+          binary(),
+          binary()) -> binary().
 
-md5(Data) ->
-    ehsa_binary:encode(crypto:md5(Data)).
+ha1(Username, Realm, Password) ->
+    md5([Username, $:, Realm, $:, Password]).
 
 %%--------------------------------------------------------------------
 %% @equiv verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, _Options = [])
@@ -141,18 +143,6 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec ha1(binary(),
-          binary(),
-          binary()) -> binary().
-
-ha1(Username, Realm, Password) ->
-    md5([Username, $:, Realm, $:, Password]).
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
 -spec ha2(binary() | undefined,
           binary(),
           binary(),
@@ -166,6 +156,16 @@ ha2(QOP, Method, URI, _Req_Body)
   when QOP =:= <<"auth">>;
        QOP =:= undefined ->
     md5([Method, $:, URI]).
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
+-spec md5(iodata()) -> binary().
+
+md5(Data) ->
+    ehsa_binary:encode(crypto:md5(Data)).
 
 %%--------------------------------------------------------------------
 %% @private
