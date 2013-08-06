@@ -8,12 +8,23 @@
 -module(ehsa_digest).
 
 %% API
--export([verify_auth/3, verify_auth/4, verify_auth_int/4,
+-export([md5/1, verify_auth/3, verify_auth/4, verify_auth_int/4,
          verify_auth_int/5]).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Computes MD5 hash digest of `Data'. Result is hex-encoded binary
+%% string.
+%% @end
+%%--------------------------------------------------------------------
+-spec md5(iodata()) -> binary().
+
+md5(Data) ->
+    ehsa_binary:encode(crypto:md5(Data)).
 
 %%--------------------------------------------------------------------
 %% @equiv verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, _Options = [])
@@ -155,16 +166,6 @@ ha2(QOP, Method, URI, _Req_Body)
   when QOP =:= <<"auth">>;
        QOP =:= undefined ->
     md5([Method, $:, URI]).
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--spec md5(iodata()) -> binary().
-
-md5(Data) ->
-    ehsa_binary:encode(crypto:md5(Data)).
 
 %%--------------------------------------------------------------------
 %% @private
