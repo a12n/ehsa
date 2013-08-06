@@ -8,7 +8,7 @@
 %%%===================================================================
 
 password(Username) ->
-    All = [ {<<"admin">>, <<"admin01">>},
+    All = [ {<<"admin">>, {digest, <<"e2a66f6c78d0e132f227453dfa25559f">>}},
             {<<"guest">>, <<"">>},
             {<<"xyzzy">>, <<"foo12">>} ],
     case lists:keyfind(Username, 1, All) of
