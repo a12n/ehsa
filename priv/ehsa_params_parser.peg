@@ -91,7 +91,7 @@ quoted_string <- '"' (!'"' ("\\\\" / '\\"' / .))* '"'
 
 
 % Yeah, it's that clumsy.
-request_uri <- [-#%&*+0-9A-Z_a-z~:/?.]+
+request_uri <- [-#%&*+0-9A-Z_a-z~:/?.=]+
 `iolist_to_binary(Node)` ;
 
 
