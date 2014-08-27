@@ -21,7 +21,8 @@ doc:
 	$(REBAR) doc
 
 rebar:
-	wget "http://cloud.github.com/downloads/basho/rebar/rebar" -O $@ && chmod u+x $@
+	wget "https://github.com/rebar/rebar/releases/download/2.5.1/rebar" -O $@
+	chmod +x $@
 
 shell:
 	$(ERL) -smp -pa ebin/ -pa deps/*/ebin/
