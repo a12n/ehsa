@@ -4,20 +4,20 @@
 ERL ?= erl
 REBAR ?= ./rebar
 
-all:
+all: $(REBAR)
 	$(REBAR) compile
 
-app:
+app: $(REBAR)
 	$(REBAR) compile skip_deps=true
 
-clean:
+clean: $(REBAR)
 	$(REBAR) clean
 
 distclean: clean
 	rm -f doc/*.css doc/*.html doc/*.png doc/edoc-info
 	rm -rf .eunit
 
-doc:
+doc: $(REBAR)
 	$(REBAR) doc
 
 rebar:
@@ -27,5 +27,5 @@ rebar:
 shell:
 	$(ERL) -smp -pa ebin/ -pa deps/*/ebin/
 
-test:
+test: $(REBAR)
 	$(REBAR) eunit
