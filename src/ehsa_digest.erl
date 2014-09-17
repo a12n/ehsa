@@ -81,14 +81,15 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% responses will not signal a support for it.
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
-%% `undefined' if there is no such user, or one of the following:
-%% <dl>
-%% <dt>`Password'</dt>
-%% <dd>Cleartext password as binary string.</dd>
-%% <dt>`{digest, Digest}'</dt>
-%% <dd>Where `Digest' is computed as `ehsa_digest:ha1(Username, Realm,
-%% Password)'. It's hex-encoded lower case binary string.</dd>
-%% </dl>
+%% `undefined' if there is no such user, or `{Password, Opaque}'. The
+%% `Password' is either cleartext password as binary string, or
+%% `{digest, Digest}', where `Digest' is computed as
+%% `ehsa_digest:ha1(Username, Realm, ClearPassword)'. It's hex-encoded
+%% lower case binary string.
+%%
+%% Usually `Pwd_Fun' performs some useful work (e.g., does a database
+%% query). It should return the result in `Opaque' term, which will be
+%% passed to the caller untouched.
 %%
 %% The available `Options' are:
 %% <dl>
@@ -281,7 +282,7 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                 undefined ->
                     %% Invalid credentials
                     unauthorized(false, Int, Options);
-                Password ->
+                {Password, _Opaque} ->
                     HA1 =
                         case Password of
                             {digest, Digest} ->
@@ -342,8 +343,8 @@ ehsa_digest_test_() ->
      fun(_Pid) ->
              Realm = <<"testrealm@host.com">>,
              Options = [{realm, Realm}],
-             Password = fun(<<"Mufasa">>) -> <<"Circle Of Life">>;
-                           (<<"Qobb">>) -> <<"Mellon">>;
+             Password = fun(<<"Mufasa">>) -> {<<"Circle Of Life">>, 1};
+                           (<<"Qobb">>) -> {<<"Mellon">>, 2};
                            (_Other) -> undefined end,
              [ ?_assertMatch(
                   {true, {<<"Mufasa">>, <<"Circle Of Life">>}},
