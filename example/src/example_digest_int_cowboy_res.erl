@@ -11,7 +11,7 @@
 %%%===================================================================
 
 init({_Transport, http}, _Req, _Opts) ->
-    {upgrade, protocol, cowboy_http_rest}.
+    {upgrade, protocol, cowboy_rest}.
 
 %%%===================================================================
 %%% cowboy_http_rest callbacks
