@@ -34,7 +34,7 @@ content_types_provided(Req, State) ->
 is_authorized(Req, State) ->
     {Authorization, Req_1} = cowboy_http_req:header('Authorization', Req),
     case ehsa_basic:verify_auth(Authorization, fun example_common:password/1) of
-        {true, {Username, _Password}} ->
+        {true, _Opaque = Username} ->
             {true, Req_1, _State = Username};
         {false, Res_Header} ->
             {{false, Res_Header}, Req_1, State}

@@ -35,7 +35,7 @@ is_authorized(Req, State) ->
     {Method, Req_1} = cowboy_http_req:method(Req),
     {Authorization, Req_2} = cowboy_http_req:header('Authorization', Req_1),
     case ehsa_digest:verify_auth(Method, Authorization, fun example_common:password/1) of
-        {true, {Username, _Password}} ->
+        {true, _Opaque = Username} ->
             {true, Req_2, _State = Username};
         {false, Res_Header} ->
             {{false, Res_Header}, Req_2, State}
