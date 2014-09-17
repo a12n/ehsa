@@ -35,7 +35,7 @@ ha1(Username, Realm, Password) ->
 -spec verify_auth(atom() | binary(),
                   iodata() | undefined,
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_auth(Method, Req_Header, Pwd_Fun) ->
     verify_auth(Method, Req_Header, Pwd_Fun, []).
@@ -48,7 +48,7 @@ verify_auth(Method, Req_Header, Pwd_Fun) ->
                   iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_auth(Method, Req_Header, Pwd_Fun, Options) ->
     verify_auth_int(Method, Req_Header, undefined, Pwd_Fun, Options).
@@ -61,7 +61,7 @@ verify_auth(Method, Req_Header, Pwd_Fun, Options) ->
                       iodata() | undefined,
                       iodata() | undefined,
                       ehsa:password_fun()) ->
-                             {true, ehsa:credentials()} | {false, iodata()}.
+                             {true, any()} | {false, iodata()}.
 
 verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
     verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, []).
@@ -103,10 +103,10 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% list by default.</dd>
 %% </dl>
 %%
-%% Function returns either `{true, Authorized :: credentials()}' if
-%% authentication information is valid, or `{false, Res_Header ::
-%% iodata()}'. Returned `Res_Header' must be used as a value for
-%% "WWW-Authenticate" header of the response.
+%% Function returns either `{true, Opaque :: any()}' if authentication
+%% information is valid (`Opaque' is from the `Pwd_Fun'), or `{false,
+%% Res_Header :: iodata()}'. Returned `Res_Header' must be used as a
+%% value for "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth_int(atom() | binary(),
@@ -114,7 +114,7 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
                       iodata() | undefined,
                       ehsa:password_fun(),
                       ehsa:options()) ->
-                             {true, ehsa:credentials()} | {false, iodata()}.
+                             {true, any()} | {false, iodata()}.
 
 verify_auth_int(Method, undefined, Req_Body, Pwd_Fun, Options) ->
     verify_auth_int(Method, <<>>, Req_Body, Pwd_Fun, Options);
@@ -245,7 +245,7 @@ unauthorized(Stale, Int, Options) ->
                   iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
     Int = (Req_Body =/= undefined),
@@ -282,7 +282,7 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                 undefined ->
                     %% Invalid credentials
                     unauthorized(false, Int, Options);
-                {Password, _Opaque} ->
+                {Password, Opaque} ->
                     HA1 =
                         case Password of
                             {digest, Digest} ->
@@ -299,7 +299,7 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                                  ha2(QOP, Method, URI, Req_Body)),
                     case ehsa_binary:to_lower(Response) of
                         Computed_Response ->
-                            {true, {Username, Password}};
+                            {true, Opaque};
                         _Other ->
                             %% Invalid response
                             unauthorized(false, Int, Options)
@@ -347,7 +347,7 @@ ehsa_digest_test_() ->
                            (<<"Qobb">>) -> {<<"Mellon">>, 2};
                            (_Other) -> undefined end,
              [ ?_assertMatch(
-                  {true, {<<"Mufasa">>, <<"Circle Of Life">>}},
+                  {true, 1},
                   verify_auth(<<"GET">>,
                               <<"Digest username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", response=\"670fd8c2df070c60b045671b8b24ff02\"">>,
                               Password,
@@ -360,7 +360,7 @@ ehsa_digest_test_() ->
                               Password)
                  ),
                ?_assertMatch(
-                  {true, {<<"Mufasa">>, <<"Circle Of Life">>}},
+                  {true, 1},
                   verify_auth('GET',
                               ["Digest ", "username=\"Mufasa\"", [", realm=\"testrealm@host.com\""], ", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"", ",uri=\"/dir/index.html\", response=\"670fd8c2df070c60b045671b8b24ff02\""],
                               Password,
