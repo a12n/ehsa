@@ -20,7 +20,7 @@
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_auth(Req_Header, Pwd_Fun) ->
     verify_auth(Req_Header, Pwd_Fun, []).
@@ -33,14 +33,15 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% be `undefined').
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
-%% `undefined' if there is no such user, or one of the following:
-%% <dl>
-%% <dt>`Password'</dt>
-%% <dd>Cleartext password as binary string.</dd>
-%% <dt>`{digest, Digest}'</dt>
-%% <dd>Where `Digest' is computed as `ehsa_digest:ha1(Username, Realm,
-%% Password)'. It's hex-encoded lower case binary string.</dd>
-%% </dl>
+%% `undefined' if there is no such user, or `{Password, Opaque}'. The
+%% `Password' is either cleartext password as binary string, or
+%% `{digest, Digest}', where `Digest' is computed as
+%% `ehsa_digest:ha1(Username, Realm, ClearPassword)'. It's hex-encoded
+%% lower case binary string.
+%%
+%% Usually `Pwd_Fun' performs some useful work (e.g., does a database
+%% query). It should return the result in `Opaque' term, which will be
+%% passed to the caller untouched.
 %%
 %% `Options' is a list of properties. The available options are:
 %% <dl>
@@ -50,16 +51,16 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% string.</dd>
 %% </dl>
 %%
-%% Function returns either `{true, Authorized :: credentials()}' if
-%% authentication information is valid, or `{false, Res_Header ::
-%% iodata()}'. Returned `Res_Header' must be used as a value for
-%% "WWW-Authenticate" header of the response.
+%% Function returns either `{true, Opaque :: any()}' if authentication
+%% information is valid (`Opaque' is from the `Pwd_Fun'), or `{false,
+%% Res_Header :: iodata()}'. Returned `Res_Header' must be used as a
+%% value for "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_auth(undefined, Pwd_Fun, Options) ->
     verify_auth(<<>>, Pwd_Fun, Options);
@@ -104,21 +105,21 @@ unauthorized(Options) ->
 -spec verify_info(binary(),
                   ehsa:password_fun(),
                   ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_info(Req_Info, Pwd_Fun, Options) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of
-        {digest, Digest} ->
+        {{digest, Digest}, Opaque} ->
             Realm = proplists:get_value(realm, Options, <<>>),
             case ehsa_digest:ha1(Username, Realm, Password) of
                 Digest ->
-                    {true, {Username, {digest, Digest}}};
+                    {true, Opaque};
                 _Other ->
                     unauthorized(Options)
             end;
-        Password ->
-            {true, {Username, Password}};
+        {Password, Opaque} ->
+            {true, Opaque};
         _Other ->
             unauthorized(Options)
     end.
@@ -131,9 +132,9 @@ verify_info(Req_Info, Pwd_Fun, Options) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-password(<<"admin">>) -> {digest, ehsa_digest:ha1(<<"admin">>, <<"DaRk">>, <<"123">>)};
-password(<<"guest">>) -> <<>>;
-password(<<"xyzzy">>) -> <<"1,.:235asd\/">>;
+password(<<"admin">>) -> {{digest, ehsa_digest:ha1(<<"admin">>, <<"DaRk">>, <<"123">>)}, 1};
+password(<<"guest">>) -> {<<>>, 2};
+password(<<"xyzzy">>) -> {<<"1,.:235asd\/">>, 3};
 password(_Other) -> undefined.
 
 verify_auth_2_test_() ->
@@ -149,14 +150,14 @@ verify_auth_2_test_() ->
               ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end,
       ?_assertMatch(
-         {true, {<<"guest">>, <<>>}},
+         {true, 2},
          verify_auth(<<"BaSiC ", (base64:encode(<<"guest:">>))/bytes>>, fun password/1)
         ),
       fun() ->
               Username = <<"xyzzy">>,
-              Password = password(Username),
+              {Password, Opaque} = password(Username),
               ?assertMatch(
-                 {true, {Username, Password}},
+                 {true, Opaque},
                  verify_auth(<<"Basic ", (base64:encode(<<Username/bytes, $:, Password/bytes>>))/bytes>>, fun password/1)
                 )
       end,
@@ -191,9 +192,9 @@ verify_auth_3_test_() ->
       end,
       fun() ->
               Username = <<"admin">>,
-              Password = password(Username),
+              {_Password, Opaque} = password(Username),
               ?assertMatch(
-                 {true, {Username, Password}},
+                 {true, Opaque},
                  verify_auth(<<"Basic ", (base64:encode(<<"admin:123">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}])
                 )
       end ].

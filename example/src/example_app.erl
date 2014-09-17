@@ -10,6 +10,15 @@
 %%%===================================================================
 
 start(_Start_Type, _Start_Args) ->
+    Dispatch = cowboy_router:compile([{'_', [ {[<<"/basic">>], example_basic_cowboy_res, []},
+                                              {[<<"/digest">>], example_digest_cowboy_res, []},
+                                              {[<<"/digest_int">>], example_digest_int_cowboy_res, []} ]}]),
+
+    {ok, _Pid} = cowboy:start_http(example_server, 10,
+                                   [{ip, {127,0,0,1}},
+                                    {port, 8000}],
+                                   [{env, [{dispatch, Dispatch}]}]),
+
     example_sup:start_link().
 
 stop(_State) ->
