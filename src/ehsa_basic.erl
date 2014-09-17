@@ -119,7 +119,7 @@ verify_info(Req_Info, Pwd_Fun, Options) ->
             end;
         Password ->
             {true, {Username, Password}};
-        undefined ->
+        _Other ->
             unauthorized(Options)
     end.
 
