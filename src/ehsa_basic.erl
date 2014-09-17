@@ -20,7 +20,7 @@
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
                   ehsa:password_fun()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_auth(Req_Header, Pwd_Fun) ->
     verify_auth(Req_Header, Pwd_Fun, []).
@@ -51,16 +51,16 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% string.</dd>
 %% </dl>
 %%
-%% Function returns either `{true, Authorized :: credentials()}' if
-%% authentication information is valid, or `{false, Res_Header ::
-%% iodata()}'. Returned `Res_Header' must be used as a value for
-%% "WWW-Authenticate" header of the response.
+%% Function returns either `{true, Opaque :: any()}' if authentication
+%% information is valid (`Opaque' is from the `Pwd_Fun'), or `{false,
+%% Res_Header :: iodata()}'. Returned `Res_Header' must be used as a
+%% value for "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
                   ehsa:password_fun(),
                   ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_auth(undefined, Pwd_Fun, Options) ->
     verify_auth(<<>>, Pwd_Fun, Options);
@@ -105,21 +105,21 @@ unauthorized(Options) ->
 -spec verify_info(binary(),
                   ehsa:password_fun(),
                   ehsa:options()) ->
-                         {true, ehsa:credentials()} | {false, iodata()}.
+                         {true, any()} | {false, iodata()}.
 
 verify_info(Req_Info, Pwd_Fun, Options) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of
-        {{digest, Digest}, _Opaque} ->
+        {{digest, Digest}, Opaque} ->
             Realm = proplists:get_value(realm, Options, <<>>),
             case ehsa_digest:ha1(Username, Realm, Password) of
                 Digest ->
-                    {true, {Username, {digest, Digest}}};
+                    {true, Opaque};
                 _Other ->
                     unauthorized(Options)
             end;
-        {Password, _Opaque} ->
-            {true, {Username, Password}};
+        {Password, Opaque} ->
+            {true, Opaque};
         undefined ->
             unauthorized(Options)
     end.
@@ -150,14 +150,14 @@ verify_auth_2_test_() ->
               ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
       end,
       ?_assertMatch(
-         {true, {<<"guest">>, <<>>}},
+         {true, 2},
          verify_auth(<<"BaSiC ", (base64:encode(<<"guest:">>))/bytes>>, fun password/1)
         ),
       fun() ->
               Username = <<"xyzzy">>,
-              {Password, _Opaque} = password(Username),
+              {Password, Opaque} = password(Username),
               ?assertMatch(
-                 {true, {Username, Password}},
+                 {true, Opaque},
                  verify_auth(<<"Basic ", (base64:encode(<<Username/bytes, $:, Password/bytes>>))/bytes>>, fun password/1)
                 )
       end,
@@ -192,9 +192,9 @@ verify_auth_3_test_() ->
       end,
       fun() ->
               Username = <<"admin">>,
-              {Password, _Opaque} = password(Username),
+              {_Password, Opaque} = password(Username),
               ?assertMatch(
-                 {true, {Username, Password}},
+                 {true, Opaque},
                  verify_auth(<<"Basic ", (base64:encode(<<"admin:123">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}])
                 )
       end ].
