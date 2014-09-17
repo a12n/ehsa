@@ -8,25 +8,7 @@
 %%%===================================================================
 
 start() ->
-    application:start(cowboy),
-
-    application:start(crypto),
-    application:start(inets),
-    application:start(mochiweb),
-    application:start(webmachine),
-
-    application:start(ehsa),
-
-    application:start(example).
+    application:ensure_all_started(example).
 
 stop() ->
-    application:stop(example),
-
-    application:stop(ehsa),
-
-    application:stop(webmachine),
-    application:stop(mochiweb),
-    application:stop(inets),
-    application:stop(crypto),
-
-    application:stop(cowboy).
+    application:stop(example).
