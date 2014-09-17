@@ -13,7 +13,7 @@ password(Username) ->
             {<<"xyzzy">>, <<"foo12">>} ],
     case lists:keyfind(Username, 1, All) of
         {Username, Password} ->
-            Password;
+            {Password, _Opaque = Username};
         _Other ->
             undefined
     end.

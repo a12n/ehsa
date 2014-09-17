@@ -20,16 +20,6 @@ start_link() ->
 %%%===================================================================
 
 init([]) ->
-    Cowboy = cowboy:child_spec(example_server,
-                               10,
-                               cowboy_tcp_transport,
-                               [{ip, {127,0,0,1}},
-                                {port, 8000}],
-                               cowboy_http_protocol,
-                               [{dispatch, [{'_', [ {[<<"basic">>], example_basic_cowboy_res, []},
-                                                    {[<<"digest">>], example_digest_cowboy_res, []},
-                                                    {[<<"digest_int">>], example_digest_int_cowboy_res, []} ]}]}]),
-
     Webmachine_Args = [ {ip, "127.0.0.1"},
                         {port, 8001},
                         {dispatch, [ {["basic"], example_basic_webmachine_res, []},
@@ -43,4 +33,4 @@ init([]) ->
     EHSA_NC = ehsa_nc:child_spec([{max_nc, 5},
                                   {nc_ttl, 30}]),
 
-    {ok, { {one_for_one, 5, 10}, [Cowboy, Webmachine, EHSA_NC]} }.
+    {ok, { {one_for_one, 5, 10}, [Webmachine, EHSA_NC]} }.
