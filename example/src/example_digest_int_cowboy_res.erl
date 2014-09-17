@@ -42,7 +42,7 @@ is_authorized(Req, State) ->
                 {<<>>, Req_2}
         end,
     case ehsa_digest:verify_auth_int(Method, Authorization, Body, fun example_common:password/1) of
-        {true, {Username, _Password}} ->
+        {true, _Opaque = Username} ->
             {true, Req_3, _State = Username};
         {false, Res_Header} ->
             {{false, Res_Header}, Req_3, State}

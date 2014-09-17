@@ -22,7 +22,7 @@ init(_Args) ->
 is_authorized(Req, Context) ->
     Authorization = wrq:get_req_header("Authorization", Req),
     case ehsa_basic:verify_auth(Authorization, fun example_common:password/1) of
-        {true, {Username, _Password}} ->
+        {true, _Opaque = Username} ->
             {true, Req, _Context = Username};
         {false, Res_Header} ->
             {Res_Header, Req, Context}
