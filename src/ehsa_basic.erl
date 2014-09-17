@@ -33,14 +33,15 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% be `undefined').
 %%
 %% `Pwd_Fun' is a function which, for a given user name, must return
-%% `undefined' if there is no such user, or one of the following:
-%% <dl>
-%% <dt>`Password'</dt>
-%% <dd>Cleartext password as binary string.</dd>
-%% <dt>`{digest, Digest}'</dt>
-%% <dd>Where `Digest' is computed as `ehsa_digest:ha1(Username, Realm,
-%% Password)'. It's hex-encoded lower case binary string.</dd>
-%% </dl>
+%% `undefined' if there is no such user, or `{Password, Opaque}'. The
+%% `Password' is either cleartext password as binary string, or
+%% `{digest, Digest}', where `Digest' is computed as
+%% `ehsa_digest:ha1(Username, Realm, ClearPassword)'. It's hex-encoded
+%% lower case binary string.
+%%
+%% Usually `Pwd_Fun' performs some useful work (e.g., does a database
+%% query). It should return the result in `Opaque' term, which will be
+%% passed to the caller untouched.
 %%
 %% `Options' is a list of properties. The available options are:
 %% <dl>
@@ -109,7 +110,7 @@ unauthorized(Options) ->
 verify_info(Req_Info, Pwd_Fun, Options) ->
     [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
     case Pwd_Fun(Username) of
-        {digest, Digest} ->
+        {{digest, Digest}, _Opaque} ->
             Realm = proplists:get_value(realm, Options, <<>>),
             case ehsa_digest:ha1(Username, Realm, Password) of
                 Digest ->
@@ -117,7 +118,7 @@ verify_info(Req_Info, Pwd_Fun, Options) ->
                 _Other ->
                     unauthorized(Options)
             end;
-        Password ->
+        {Password, _Opaque} ->
             {true, {Username, Password}};
         undefined ->
             unauthorized(Options)
@@ -131,9 +132,9 @@ verify_info(Req_Info, Pwd_Fun, Options) ->
 
 -include_lib("eunit/include/eunit.hrl").
 
-password(<<"admin">>) -> {digest, ehsa_digest:ha1(<<"admin">>, <<"DaRk">>, <<"123">>)};
-password(<<"guest">>) -> <<>>;
-password(<<"xyzzy">>) -> <<"1,.:235asd\/">>;
+password(<<"admin">>) -> {{digest, ehsa_digest:ha1(<<"admin">>, <<"DaRk">>, <<"123">>)}, 1};
+password(<<"guest">>) -> {<<>>, 2};
+password(<<"xyzzy">>) -> {<<"1,.:235asd\/">>, 3};
 password(_Other) -> undefined.
 
 verify_auth_2_test_() ->
@@ -154,7 +155,7 @@ verify_auth_2_test_() ->
         ),
       fun() ->
               Username = <<"xyzzy">>,
-              Password = password(Username),
+              {Password, _Opaque} = password(Username),
               ?assertMatch(
                  {true, {Username, Password}},
                  verify_auth(<<"Basic ", (base64:encode(<<Username/bytes, $:, Password/bytes>>))/bytes>>, fun password/1)
@@ -191,7 +192,7 @@ verify_auth_3_test_() ->
       end,
       fun() ->
               Username = <<"admin">>,
-              Password = password(Username),
+              {Password, _Opaque} = password(Username),
               ?assertMatch(
                  {true, {Username, Password}},
                  verify_auth(<<"Basic ", (base64:encode(<<"admin:123">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}])
