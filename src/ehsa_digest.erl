@@ -172,7 +172,7 @@ ha2(QOP, Method, URI, _Req_Body)
 -spec md5(iodata()) -> binary().
 
 md5(Data) ->
-    ehsa_binary:encode(crypto:md5(Data)).
+    ehsa_binary:encode(crypto:hash(md5, Data)).
 
 %%--------------------------------------------------------------------
 %% @private
