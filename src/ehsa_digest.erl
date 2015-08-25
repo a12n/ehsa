@@ -326,7 +326,7 @@ verify_nc(_QOP = undefined, _Nonce, _NC) ->
     ok;
 
 verify_nc(_QOP, Nonce, NC) ->
-    ehsa_nc:verify(Nonce, ehsa_binary:to_integer(NC, 16)).
+    ehsa_nc:verify(Nonce, binary_to_integer(NC, 16)).
 
 %%%===================================================================
 %%% Tests
