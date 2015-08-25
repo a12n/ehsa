@@ -15,31 +15,31 @@
 %%%===================================================================
 
 %%--------------------------------------------------------------------
-%% @equiv verify_auth(Req_Header, Pwd_Fun, _Options = [])
+%% @equiv verify_auth(ReqHeader, PwdFun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
                   ehsa:password_fun()) ->
                          {true, any()} | {false, iodata()}.
 
-verify_auth(Req_Header, Pwd_Fun) ->
-    verify_auth(Req_Header, Pwd_Fun, []).
+verify_auth(ReqHeader, PwdFun) ->
+    verify_auth(ReqHeader, PwdFun, []).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% Verify basic authentication of HTTP request.
 %%
-%% `Req_Header' is value of "Authorization" header from client (it may
+%% `ReqHeader' is value of "Authorization" header from client (it may
 %% be `undefined').
 %%
-%% `Pwd_Fun' is a function which, for a given user name, must return
+%% `PwdFun' is a function which, for a given user name, must return
 %% `undefined' if there is no such user, or `{Password, Opaque}'. The
 %% `Password' is either cleartext password as binary string, or
 %% `{digest, Digest}', where `Digest' is computed as
 %% `ehsa_digest:ha1(Username, Realm, ClearPassword)'. It's hex-encoded
 %% lower case binary string.
 %%
-%% Usually `Pwd_Fun' performs some useful work (e.g., does a database
+%% Usually `PwdFun' performs some useful work (e.g., does a database
 %% query). It should return the result in `Opaque' term, which will be
 %% passed to the caller untouched.
 %%
@@ -52,8 +52,8 @@ verify_auth(Req_Header, Pwd_Fun) ->
 %% </dl>
 %%
 %% Function returns either `{true, Opaque :: any()}' if authentication
-%% information is valid (`Opaque' is from the `Pwd_Fun'), or `{false,
-%% Res_Header :: iodata()}'. Returned `Res_Header' must be used as a
+%% information is valid (`Opaque' is from the `PwdFun'), or `{false,
+%% ResHeader :: iodata()}'. Returned `ResHeader' must be used as a
 %% value for "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
@@ -62,18 +62,18 @@ verify_auth(Req_Header, Pwd_Fun) ->
                   ehsa:options()) ->
                          {true, any()} | {false, iodata()}.
 
-verify_auth(undefined, Pwd_Fun, Options) ->
-    verify_auth(<<>>, Pwd_Fun, Options);
+verify_auth(undefined, PwdFun, Options) ->
+    verify_auth(<<>>, PwdFun, Options);
 
-verify_auth(Req_Header, Pwd_Fun, Options) when is_list(Req_Header) ->
-    verify_auth(iolist_to_binary(Req_Header), Pwd_Fun, Options);
+verify_auth(ReqHeader, PwdFun, Options) when is_list(ReqHeader) ->
+    verify_auth(iolist_to_binary(ReqHeader), PwdFun, Options);
 
-verify_auth(Req_Header, Pwd_Fun, Options) ->
-    case binary:split(Req_Header, <<$ >>) of
-        [Scheme, Req_Info] ->
+verify_auth(ReqHeader, PwdFun, Options) ->
+    case binary:split(ReqHeader, <<$ >>) of
+        [Scheme, ReqInfo] ->
             case ehsa_binary:to_lower(Scheme) of
                 <<"basic">> ->
-                    verify_info(Req_Info, Pwd_Fun, Options);
+                    verify_info(ReqInfo, PwdFun, Options);
                 _Other ->
                     unauthorized(Options)
             end;
@@ -94,8 +94,8 @@ verify_auth(Req_Header, Pwd_Fun, Options) ->
 
 unauthorized(Options) ->
     Realm = proplists:get_value(realm, Options, <<>>),
-    Res_Header = [ <<"Basic ">>, ehsa_params:format(realm, Realm) ],
-    {false, Res_Header}.
+    ResHeader = [ <<"Basic ">>, ehsa_params:format(realm, Realm) ],
+    {false, ResHeader}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -107,9 +107,9 @@ unauthorized(Options) ->
                   ehsa:options()) ->
                          {true, any()} | {false, iodata()}.
 
-verify_info(Req_Info, Pwd_Fun, Options) ->
-    [Username, Password] = binary:split(base64:decode(Req_Info), <<$:>>),
-    case Pwd_Fun(Username) of
+verify_info(ReqInfo, PwdFun, Options) ->
+    [Username, Password] = binary:split(base64:decode(ReqInfo), <<$:>>),
+    case PwdFun(Username) of
         {{digest, Digest}, Opaque} ->
             Realm = proplists:get_value(realm, Options, <<>>),
             case ehsa_digest:ha1(Username, Realm, Password) of
@@ -140,14 +140,14 @@ password(_Other) -> undefined.
 verify_auth_2_test_() ->
     [ ?_assertError(_, verify_auth(<<"Basic ", (base64:encode("xyz"))/bytes>>, fun password/1)),
       fun() ->
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(<<"xyz">>, fun password/1),
-              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end,
       fun() ->
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(<<"Basic ", (base64:encode(<<"root:toor">>))/bytes>>, fun password/1),
-              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end,
       ?_assertMatch(
          {true, 2},
@@ -162,33 +162,33 @@ verify_auth_2_test_() ->
                 )
       end,
       fun() ->
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(<<"Basic ", (base64:encode(<<"adm:321">>))/bytes>>, fun password/1),
-              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end,
       fun() ->
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(<<"Digest bad,auth,info">>, fun password/1),
-              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end,
       fun() ->
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(undefined, fun password/1),
-              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end,
       fun() ->
               Username = <<"admin">>,
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(["Basic ", base64:encode(<<Username/bytes, $:, "123">>)],
                               fun password/1),
-              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end ].
 
 verify_auth_3_test_() ->
     [ fun() ->
-              {false, Res_Header} =
+              {false, ResHeader} =
                   verify_auth(<<"Basic ", (base64:encode(<<"a:b">>))/bytes>>, fun password/1, [{realm, <<"DaRk">>}]),
-              ?assertEqual(<<"Basic realm=\"DaRk\"">>, iolist_to_binary(Res_Header))
+              ?assertEqual(<<"Basic realm=\"DaRk\"">>, iolist_to_binary(ResHeader))
       end,
       fun() ->
               Username = <<"admin">>,
