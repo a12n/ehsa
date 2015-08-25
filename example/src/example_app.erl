@@ -9,7 +9,7 @@
 %%% Application callbacks
 %%%===================================================================
 
-start(_Start_Type, _Start_Args) ->
+start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([{'_', [ {[<<"/basic">>], example_basic_cowboy_res, []},
                                               {[<<"/digest">>], example_digest_cowboy_res, []},
                                               {[<<"/digest_int">>], example_digest_int_cowboy_res, []} ]}]),

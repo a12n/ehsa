@@ -25,8 +25,8 @@ is_authorized(Req, Context) ->
     case ehsa_digest:verify_auth(Method, Authorization, fun example_common:password/1) of
         {true, _Opaque = Username} ->
             {true, Req, _Context = Username};
-        {false, Res_Header} ->
-            {Res_Header, Req, Context}
+        {false, ResHeader} ->
+            {ResHeader, Req, Context}
     end.
 
 process_get(Req, Context = Username) ->
