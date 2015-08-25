@@ -29,7 +29,7 @@ ha1(Username, Realm, Password) ->
     md5([Username, $:, Realm, $:, Password]).
 
 %%--------------------------------------------------------------------
-%% @equiv verify_auth(Method, ReqHeader, ReqBody, PwdFun, _Options = [])
+%% @equiv verify_auth(Method, ReqHeader, PwdFun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
