@@ -233,6 +233,7 @@ parse_1_test_() ->
       ?_assertEqual({error, badarg}, parse(<<" ">>)),
       ?_assertEqual({error, badarg}, parse(<<",">>)),
       ?_assertEqual({error, badarg}, parse(<<"\"">>)),
+      ?_assertEqual({error, badarg}, parse(<<" realm ">>)),
       ?_assertEqual({error, badarg}, parse(<<"a=\"">>)),
       ?_assertEqual({error, badarg}, parse(<<", a=2">>)),
       ?_assertEqual({error, badarg}, parse(<<"a=2, ">>)),
@@ -243,6 +244,23 @@ parse_1_test_() ->
       ?_assertEqual({ok, [{<<"a">>, <<",">>}]}, parse(<<" a=\",\" ">>)),
       ?_assertEqual({ok, [{<<"realm">>, <<"SeRvEr">>}]}, parse(<<" rEaLm=SeRvEr ">>)),
       ?_assertEqual({ok, [{<<"realm">>, <<"SeRvEr">>}]}, parse(<<" rEaLm=\"SeRvEr\" ">>)),
+      fun() ->
+              {ok, Ans} =
+                  parse(<<" a=1 , b=2, b=3, a=4 ">>),
+              ?assertEqual([ {<<"a">>, <<"1">>},
+                             {<<"a">>, <<"4">>},
+                             {<<"b">>, <<"2">>},
+                             {<<"b">>, <<"3">>} ],
+                           lists:sort(Ans))
+      end,
+      fun() ->
+              {ok, Ans} =
+                  parse(<<"a=1\t,\tb=\"c\"\t,\td=e">>),
+              ?assertEqual([ {<<"a">>, <<"1">>},
+                             {<<"b">>, <<"c">>},
+                             {<<"d">>, <<"e">>} ],
+                           lists:sort(Ans))
+      end,
       fun() ->
               {ok, Ans} =
                   parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>),
