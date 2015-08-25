@@ -21,7 +21,7 @@ rebar:
 	chmod +x $@
 
 shell:
-	$(ERL) -smp -pa ebin/ -pa deps/*/ebin/
+	$(ERL) -smp -pa ebin/
 
 test: $(REBAR)
 	$(REBAR) eunit
