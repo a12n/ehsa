@@ -8,8 +8,7 @@
 -module(ehsa_binary).
 
 %% API
--export([decode/1, encode/1, join/2, to_integer/1, to_integer/2,
-         to_lower/1]).
+-export([decode/1, encode/1, join/2, to_lower/1]).
 
 %%%===================================================================
 %%% API
@@ -74,26 +73,6 @@ join([H], _Sep) ->
 
 join([H | T], Sep) ->
     [H, Sep, join(T, Sep)].
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Convert binary string to integer.
-%% @end
-%%--------------------------------------------------------------------
--spec to_integer(binary()) -> integer().
-
-to_integer(Str) ->
-    list_to_integer(binary_to_list(Str)).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Convert binary string to integer.
-%% @end
-%%--------------------------------------------------------------------
--spec to_integer(binary(), 2..36) -> integer().
-
-to_integer(Str, Base) ->
-    list_to_integer(binary_to_list(Str), Base).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -162,16 +141,6 @@ join_2_test_() ->
       ?_test( <<>> = iolist_to_binary(join([], <<$,>>)) ),
       ?_test( <<"xyz">> = iolist_to_binary(join([<<"xyz">>], <<$.>>)) ),
       ?_test( <<"e, unit">> = iolist_to_binary(join([<<"e">>, <<"unit">>], <<", ">>)) ) ].
-
-to_integer_1_test_() ->
-    [ ?_test( 1 = to_integer(<<"1">>) ),
-      ?_test( 13792 = to_integer(<<"13792">>) ),
-      ?_assertException(error, badarg, to_integer(<<>>)) ].
-
-to_integer_2_test_() ->
-    [ ?_test( 32 = to_integer(<<"20">>, 16) ),
-      ?_test( 10 = to_integer(<<"1010">>, 2) ),
-      ?_assertException(error, badarg, to_integer(<<>>, 4)) ].
 
 to_lower_1_test_() ->
     [ ?_test( <<>> = to_lower(<<>>) ),
