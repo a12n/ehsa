@@ -24,12 +24,12 @@ content_types_provided(Req, State) ->
     {[{{<<"text">>, <<"plain">>, []}, to_text}], Req, State}.
 
 is_authorized(Req, State) ->
-    {Authorization, Req_1} = cowboy_req:header(<<"authorization">>, Req),
+    {Authorization, Req1} = cowboy_req:header(<<"authorization">>, Req),
     case ehsa_basic:verify_auth(Authorization, fun example_common:password/1) of
         {true, _Opaque = Username} ->
-            {true, Req_1, _State = Username};
-        {false, Res_Header} ->
-            {{false, Res_Header}, Req_1, State}
+            {true, Req1, _State = Username};
+        {false, ResHeader} ->
+            {{false, ResHeader}, Req1, State}
     end.
 
 to_text(Req, State = Username) ->
