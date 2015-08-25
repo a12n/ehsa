@@ -214,3 +214,39 @@ whitespaces(<<Char, Other/bytes>>, Fun)
 
 whitespaces(Bytes, Fun) ->
     Fun(Bytes).
+
+%%%===================================================================
+%%% Tests
+%%%===================================================================
+
+-ifdef(TEST).
+
+-include_lib("eunit/include/eunit.hrl").
+
+parse_1_test_() ->
+    [ ?_assertEqual({error, badarg}, parse(<<"">>)),
+      ?_assertEqual({error, badarg}, parse(<<" ">>)),
+      ?_assertEqual({error, badarg}, parse(<<",">>)),
+      ?_assertEqual({error, badarg}, parse(<<"\"">>)),
+      ?_assertEqual({error, badarg}, parse(<<"a=\"">>)),
+      ?_assertEqual({error, badarg}, parse(<<", a=2">>)),
+      ?_assertEqual({error, badarg}, parse(<<"a=2, ">>)),
+      ?_assertEqual({ok, [{<<"a">>, <<"">>}]}, parse(<<" a= ">>)),
+      ?_assertEqual({ok, [{<<"a">>, <<" ">>}]}, parse(<<" a=\" \" ">>)),
+      ?_assertEqual({ok, [{<<"a">>, <<"\"">>}]}, parse(<<" a=\"\\\"\" ">>)),
+      ?_assertEqual({ok, [{<<"a">>, <<"\\">>}]}, parse(<<" a=\"\\\\\" ">>)),
+      ?_assertEqual({ok, [{<<"a">>, <<",">>}]}, parse(<<" a=\",\" ">>)),
+      ?_assertEqual({ok, [{<<"realm">>, <<"SeRvEr">>}]}, parse(<<" rEaLm=SeRvEr ">>)),
+      ?_assertEqual({ok, [{<<"realm">>, <<"SeRvEr">>}]}, parse(<<" rEaLm=\"SeRvEr\" ">>)),
+      fun() ->
+              {ok, Ans} =
+                  parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>),
+              ?assertEqual([ {<<"algorithm">>, <<"MD5">>},
+                             {<<"nc">>, <<"0000001f">>},
+                             {<<"qop">>, <<"auth-int">>},
+                             {<<"realm">>, <<"xyz^12:/">>} ],
+                           lists:sort(Ans))
+      end
+    ].
+
+-endif.
