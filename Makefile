@@ -1,14 +1,10 @@
-
-.PHONY: all app clean distclean doc shell test
+.PHONY: all clean distclean doc shell test
 
 ERL ?= erl
 REBAR ?= ./rebar
 
 all: $(REBAR)
 	$(REBAR) compile
-
-app: $(REBAR)
-	$(REBAR) compile skip_deps=true
 
 clean: $(REBAR)
 	$(REBAR) clean
