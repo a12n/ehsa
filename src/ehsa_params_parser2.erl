@@ -187,18 +187,13 @@ token(Bytes, Fun) ->
 %%--------------------------------------------------------------------
 token(<<Char, Other/bytes>>, Accum, Fun)
   when Char >= $0, Char =< $9;
+       Char >= $A, Char =< $Z;
        Char >= $a, Char =< $z;
        Char =:= $-; Char =:= $!; Char =:= $#; Char =:= $$;
        Char =:= $%; Char =:= $&; Char =:= $´; Char =:= $*;
        Char =:= $+; Char =:= $^; Char =:= $_; Char =:= $`;
        Char =:= $|; Char =:= $~ ->
     token(Other, <<Accum/bytes, Char>>, Fun);
-
-%% Make tokens lower case
-token(<<Char, Other/bytes>>, Accum, Fun)
-  when Char >= $A, Char =< $Z ->
-    LowerChar = string:to_lower(Char),
-    token(Other, <<Accum/bytes, LowerChar>>, Fun);
 
 token(Bytes, Accum, Fun) ->
     Fun(Bytes, Accum).
