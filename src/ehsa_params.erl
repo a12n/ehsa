@@ -61,7 +61,26 @@ format(Key, Value) ->
 -spec parse(binary()) -> [{atom(), binary()}].
 
 parse(Str) ->
-    [_ | _] = ehsa_params_parser:parse(Str).
+    {ok, Params} = ehsa_params_parser2:parse(Str),
+    %% Convert known parameter keys to atoms, ignore unknown parameters.
+    lists:foldl(
+      fun({Key, Value}, Ans)
+            when Key =:= <<"algorithm">>;
+                 Key =:= <<"cnonce">>;
+                 Key =:= <<"domain">>;
+                 Key =:= <<"nc">>;
+                 Key =:= <<"nonce">>;
+                 Key =:= <<"opaque">>;
+                 Key =:= <<"qop">>;
+                 Key =:= <<"realm">>;
+                 Key =:= <<"response">>;
+                 Key =:= <<"stale">>;
+                 Key =:= <<"uri">>;
+                 Key =:= <<"username">> ->
+              [{binary_to_atom(Key, latin1), Value} | Ans];
+         (_Param, Ans) ->
+              Ans
+      end, _Ans = [], Params).
 
 %%%===================================================================
 %%% Tests
@@ -84,31 +103,31 @@ format_2_test_() ->
       ?_test( <<"qop=\"\"">> = iolist_to_binary(format(qop, <<>>)) ),
       ?_test( <<"algorithm=MD5">> = iolist_to_binary(format(algorithm, <<"MD5">>)) ) ].
 
-%% TODO: More tests.
 parse_1_test_() ->
-    [ ?_test( [{realm, <<"xyz^12:/">>},
-               {algorithm, <<"MD5">>},
-               {qop, <<"auth-int">>},
-               {nc, <<"0000001f">>}] = parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>) ),
-      ?_test( [{algorithm, <<"MD5-sess">>},
-               {qop, <<"auth">>},
-               {response, <<"0123456789abcDef0123456789AbCdEf">>},
-               {uri, <<"/a/b/c">>}] = parse(<<" algorithm=MD5-sess, qop=auth, response=\"0123456789abcDef0123456789AbCdEf\", uri=\"/a/b/c\"">>) ),
-      ?_test( [{username, <<"Mufasa">>},
-               {realm, <<"testrealm@host.com">>},
-               {nonce, <<"dcd98b7102dd2f0e8b11d0f600bfb0c093">>},
-               {uri, <<"/dir/index.html">>},
-               {qop, <<"auth">>},
-               {nc, <<"00000001">>},
-               {cnonce, <<"0a4f113b">>},
-               {response, <<"6629fae49393a05397450978507c4ef1">>},
-               {opaque, <<"5ccc069c403ebaf9f0171e9517f40e41">>}] = parse(<<"username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, nc=00000001, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"">>) ),
-      ?_test( [{<<"a">>, <<"1">>},
-               {<<"b">>, <<"c">>},
-               {<<"d">>, <<"e">>}] = parse(<<"a=1\t,\tb=\"c\"\t,\td=e">>) ),
-      ?_assertException(error, {badmatch, _}, parse(<<" realm ">>)),
-      ?_assertException(error, {badmatch, _}, parse(<<" xyz= ">>)),
-      ?_assertException(error, {badmatch, _}, parse(<<", realm=\"Foo\"">>)),
-      ?_assertException(error, {badmatch, _}, parse(<<"realm=\"Foo\", ">>)) ].
+    [ ?_assertEqual([ {algorithm, <<"MD5">>},
+                      {nc, <<"0000001f">>},
+                      {qop, <<"auth-int">>},
+                      {realm, <<"xyz^12:/">>} ],
+                    lists:sort(
+                      parse(<<"    realm=\"xyz^12:/\", \t algorithm=MD5   \t, qop=auth-int \t \t, nc=0000001f">>))),
+      ?_assertEqual([ {algorithm, <<"MD5-sess">>},
+                      {qop, <<"auth">>},
+                      {response, <<"0123456789abcDef0123456789AbCdEf">>},
+                      {uri, <<"/a/b/c">>} ],
+                    lists:sort(
+                      parse(<<" algorithm=MD5-sess, qop=auth, response=\"0123456789abcDef0123456789AbCdEf\", uri=\"/a/b/c\"">>))),
+      ?_assertEqual([
+                     {cnonce, <<"0a4f113b">>},
+                     {nc, <<"00000001">>},
+                     {nonce, <<"dcd98b7102dd2f0e8b11d0f600bfb0c093">>},
+                     {opaque, <<"5ccc069c403ebaf9f0171e9517f40e41">>},
+                     {qop, <<"auth">>},
+                     {realm, <<"testrealm@host.com">>},
+                     {response, <<"6629fae49393a05397450978507c4ef1">>},
+                     {uri, <<"/dir/index.html">>},
+                     {username, <<"Mufasa">>} ],
+                    lists:sort(
+                      parse(<<"username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, nc=00000001, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"">>)))
+    ].
 
 -endif.
