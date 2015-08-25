@@ -1,7 +1,5 @@
 .rebar/
 ^.eunit/
-^deps/
-^ebin/
-^example/deps/
-^example/ebin/
 ^rebar$
+deps/
+ebin/
