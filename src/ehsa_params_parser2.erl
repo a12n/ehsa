@@ -56,44 +56,6 @@ parse(Bytes) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
--spec to_lower(binary()) -> binary().
-
-to_lower(Bytes) ->
-    << <<(case C of
-              $A -> $a;
-              $B -> $b;
-              $C -> $c;
-              $D -> $d;
-              $E -> $e;
-              $F -> $f;
-              $G -> $g;
-              $H -> $h;
-              $I -> $i;
-              $J -> $j;
-              $K -> $k;
-              $L -> $l;
-              $M -> $m;
-              $N -> $n;
-              $O -> $o;
-              $P -> $p;
-              $Q -> $q;
-              $R -> $r;
-              $S -> $s;
-              $T -> $t;
-              $U -> $u;
-              $V -> $v;
-              $W -> $w;
-              $X -> $x;
-              $Y -> $y;
-              $Z -> $z;
-              _C -> C
-          end)>> || <<C>> <= Bytes >>.
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
 -spec valid_param({binary(), binary()}) -> boolean().
 
 valid_param({<<"nc">>, Value}) ->
@@ -156,13 +118,15 @@ auth_params(Bytes, Accum, Fun) ->
                                             whitespaces(
                                               Bytes3,
                                               fun(Bytes4) ->
-                                                      auth_params(Bytes4, [{to_lower(Key), Value} | Accum], Fun)
+                                                      Key2 = ehsa_binary:to_lower(Key),
+                                                      auth_params(Bytes4, [{Key2, Value} | Accum], Fun)
                                               end
                                              )
                                     end
                                    );
                              (Bytes3) ->
-                                  Fun(Bytes3, [{to_lower(Key), Value} | Accum])
+                                  Key2 = ehsa_binary:to_lower(Key),
+                                  Fun(Bytes3, [{Key2, Value} | Accum])
                           end
                          )
                 end
