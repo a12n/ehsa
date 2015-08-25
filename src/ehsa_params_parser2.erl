@@ -96,8 +96,16 @@ to_lower(Bytes) ->
 %%--------------------------------------------------------------------
 -spec valid_param({binary(), binary()}) -> boolean().
 
-valid_param(_Pair) ->
-    %% TODO: check "nc"
+valid_param({<<"nc">>, Value}) ->
+    try
+        binary_to_integer(Value, 16),
+        byte_size(Value) =:= 8
+    catch
+        error : badarg ->
+            false
+    end;
+
+valid_param(_Param) ->
     true.
 
 %%%===================================================================
