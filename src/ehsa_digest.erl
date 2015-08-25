@@ -29,7 +29,7 @@ ha1(Username, Realm, Password) ->
     md5([Username, $:, Realm, $:, Password]).
 
 %%--------------------------------------------------------------------
-%% @equiv verify_auth(Method, Req_Header, Req_Body, Pwd_Fun, _Options = [])
+%% @equiv verify_auth(Method, ReqHeader, ReqBody, PwdFun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
@@ -37,11 +37,11 @@ ha1(Username, Realm, Password) ->
                   ehsa:password_fun()) ->
                          {true, any()} | {false, iodata()}.
 
-verify_auth(Method, Req_Header, Pwd_Fun) ->
-    verify_auth(Method, Req_Header, Pwd_Fun, []).
+verify_auth(Method, ReqHeader, PwdFun) ->
+    verify_auth(Method, ReqHeader, PwdFun, []).
 
 %%--------------------------------------------------------------------
-%% @equiv verify_auth_int(Method, Req_Header, _Req_Body = undefined, Pwd_Fun, Options)
+%% @equiv verify_auth_int(Method, ReqHeader, _ReqBody = undefined, PwdFun, Options)
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(atom() | binary(),
@@ -50,11 +50,11 @@ verify_auth(Method, Req_Header, Pwd_Fun) ->
                   ehsa:options()) ->
                          {true, any()} | {false, iodata()}.
 
-verify_auth(Method, Req_Header, Pwd_Fun, Options) ->
-    verify_auth_int(Method, Req_Header, undefined, Pwd_Fun, Options).
+verify_auth(Method, ReqHeader, PwdFun, Options) ->
+    verify_auth_int(Method, ReqHeader, undefined, PwdFun, Options).
 
 %%--------------------------------------------------------------------
-%% @equiv verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, _Options = [])
+%% @equiv verify_auth_int(Method, ReqHeader, ReqBody, PwdFun, _Options = [])
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth_int(atom() | binary(),
@@ -63,8 +63,8 @@ verify_auth(Method, Req_Header, Pwd_Fun, Options) ->
                       ehsa:password_fun()) ->
                              {true, any()} | {false, iodata()}.
 
-verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
-    verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, []).
+verify_auth_int(Method, ReqHeader, ReqBody, PwdFun) ->
+    verify_auth_int(Method, ReqHeader, ReqBody, PwdFun, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -73,21 +73,21 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% Request's `Method' could be either atom (e.g. <code>'GET'</code>)
 %% or binary (e.g. `<<"POST">>').
 %%
-%% `Req_Header' is value of "Authorization" header from client (it may
+%% `ReqHeader' is value of "Authorization" header from client (it may
 %% be `undefined').
 %%
-%% Request's body `Req_Body' is used to check content's integrity. If
+%% Request's body `ReqBody' is used to check content's integrity. If
 %% it's `undefined' integrity will not be checked, and server
 %% responses will not signal a support for it.
 %%
-%% `Pwd_Fun' is a function which, for a given user name, must return
+%% `PwdFun' is a function which, for a given user name, must return
 %% `undefined' if there is no such user, or `{Password, Opaque}'. The
 %% `Password' is either cleartext password as binary string, or
 %% `{digest, Digest}', where `Digest' is computed as
 %% `ehsa_digest:ha1(Username, Realm, ClearPassword)'. It's hex-encoded
 %% lower case binary string.
 %%
-%% Usually `Pwd_Fun' performs some useful work (e.g., does a database
+%% Usually `PwdFun' performs some useful work (e.g., does a database
 %% query). It should return the result in `Opaque' term, which will be
 %% passed to the caller untouched.
 %%
@@ -104,8 +104,8 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
 %% </dl>
 %%
 %% Function returns either `{true, Opaque :: any()}' if authentication
-%% information is valid (`Opaque' is from the `Pwd_Fun'), or `{false,
-%% Res_Header :: iodata()}'. Returned `Res_Header' must be used as a
+%% information is valid (`Opaque' is from the `PwdFun'), or `{false,
+%% ResHeader :: iodata()}'. Returned `ResHeader' must be used as a
 %% value for "WWW-Authenticate" header of the response.
 %% @end
 %%--------------------------------------------------------------------
@@ -116,22 +116,22 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun) ->
                       ehsa:options()) ->
                              {true, any()} | {false, iodata()}.
 
-verify_auth_int(Method, undefined, Req_Body, Pwd_Fun, Options) ->
-    verify_auth_int(Method, <<>>, Req_Body, Pwd_Fun, Options);
+verify_auth_int(Method, undefined, ReqBody, PwdFun, Options) ->
+    verify_auth_int(Method, <<>>, ReqBody, PwdFun, Options);
 
-verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_list(Req_Header) ->
-    verify_auth_int(Method, iolist_to_binary(Req_Header), Req_Body, Pwd_Fun, Options);
+verify_auth_int(Method, ReqHeader, ReqBody, PwdFun, Options) when is_list(ReqHeader) ->
+    verify_auth_int(Method, iolist_to_binary(ReqHeader), ReqBody, PwdFun, Options);
 
-verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) when is_atom(Method) ->
-    verify_auth_int(atom_to_binary(Method, latin1), Req_Header, Req_Body, Pwd_Fun, Options);
+verify_auth_int(Method, ReqHeader, ReqBody, PwdFun, Options) when is_atom(Method) ->
+    verify_auth_int(atom_to_binary(Method, latin1), ReqHeader, ReqBody, PwdFun, Options);
 
-verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) ->
-    Int = (Req_Body =/= undefined),
-    case binary:split(Req_Header, <<$ >>) of
-        [Scheme, Req_Info] ->
+verify_auth_int(Method, ReqHeader, ReqBody, PwdFun, Options) ->
+    Int = (ReqBody =/= undefined),
+    case binary:split(ReqHeader, <<$ >>) of
+        [Scheme, ReqInfo] ->
             case ehsa_binary:to_lower(Scheme) of
                 <<"digest">> ->
-                    verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options);
+                    verify_info(Method, ReqInfo, ReqBody, PwdFun, Options);
                 _Other ->
                     %% Invalid auth scheme
                     unauthorized(false, Int, Options)
@@ -155,11 +155,11 @@ verify_auth_int(Method, Req_Header, Req_Body, Pwd_Fun, Options) ->
           binary(),
           iodata() | undefined) -> binary().
 
-ha2(_QOP = <<"auth-int">>, Method, URI, Req_Body)
-  when Req_Body =/= undefined ->
-    md5([Method, $:, URI, $:, md5(Req_Body)]);
+ha2(_QOP = <<"auth-int">>, Method, URI, ReqBody)
+  when ReqBody =/= undefined ->
+    md5([Method, $:, URI, $:, md5(ReqBody)]);
 
-ha2(QOP, Method, URI, _Req_Body)
+ha2(QOP, Method, URI, _ReqBody)
   when QOP =:= <<"auth">>;
        QOP =:= undefined ->
     md5([Method, $:, URI]).
@@ -207,7 +207,7 @@ unauthorized(Stale, Int, Options) ->
     Domain = proplists:get_value(domain, Options, []),
     Nonce = ehsa_nc:create(),
     Realm = proplists:get_value(realm, Options, <<>>),
-    Res_Header =
+    ResHeader =
         [ <<"Digest ">>,
           ehsa_params:format(realm, Realm),
           <<", ">>,
@@ -233,7 +233,7 @@ unauthorized(Stale, Int, Options) ->
               false ->
                   []
           end ],
-    {false, Res_Header}.
+    {false, ResHeader}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -247,9 +247,9 @@ unauthorized(Stale, Int, Options) ->
                   ehsa:options()) ->
                          {true, any()} | {false, iodata()}.
 
-verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
-    Int = (Req_Body =/= undefined),
-    Params = ehsa_params:parse(Req_Info),
+verify_info(Method, ReqInfo, ReqBody, PwdFun, Options) ->
+    Int = (ReqBody =/= undefined),
+    Params = ehsa_params:parse(ReqInfo),
     %% Mandatory params
     {username, Username} = lists:keyfind(username, 1, Params),
     {realm, Realm} = lists:keyfind(realm, 1, Params),
@@ -278,7 +278,7 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
     case verify_nc(QOP, Nonce, NC) of
         ok ->
             %% Check response
-            case Pwd_Fun(Username) of
+            case PwdFun(Username) of
                 undefined ->
                     %% Invalid credentials
                     unauthorized(false, Int, Options);
@@ -290,15 +290,15 @@ verify_info(Method, Req_Info, Req_Body, Pwd_Fun, Options) ->
                             _Clear ->
                                 ha1(Username, Realm, Password)
                         end,
-                    Computed_Response =
+                    ComputedResponse =
                         response(QOP,
                                  HA1,
                                  Nonce,
                                  NC,
                                  CNonce,
-                                 ha2(QOP, Method, URI, Req_Body)),
+                                 ha2(QOP, Method, URI, ReqBody)),
                     case ehsa_binary:to_lower(Response) of
-                        Computed_Response ->
+                        ComputedResponse ->
                             {true, Opaque};
                         _Other ->
                             %% Invalid response
@@ -354,7 +354,7 @@ ehsa_digest_test_() ->
                               Options)
                  ),
                ?_assertMatch(
-                  {false, _Res_Header},
+                  {false, _ResHeader},
                   verify_auth(<<"GET">>,
                               <<"Digest username=\"Mafaza\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, nc=00000002, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"">>,
                               Password)
