@@ -5,7 +5,7 @@
 %%% @end
 %%% For copyright notice see LICENSE.
 %%%-------------------------------------------------------------------
--module(ehsa_params_parser2).
+-module(ehsa_params_parser).
 
 %% API
 -export([parse/1]).
