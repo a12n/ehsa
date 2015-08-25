@@ -279,7 +279,24 @@ parse_1_test_() ->
                              {<<"qop">>, <<"auth-int">>},
                              {<<"realm">>, <<"xyz^12:/">>} ],
                            lists:sort(Ans))
-      end
+      end,
+      fun() ->
+              {ok, Ans} =
+                  parse(<<"username=\"Mufasa\", realm=\"testrealm@host.com\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\", uri=\"/dir/index.html\", qop=auth, nc=00000001, cnonce=\"0a4f113b\", response=\"6629fae49393a05397450978507c4ef1\", opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"">>),
+              ?assertEqual([ {<<"cnonce">>, <<"0a4f113b">>},
+                             {<<"nc">>, <<"00000001">>},
+                             {<<"nonce">>, <<"dcd98b7102dd2f0e8b11d0f600bfb0c093">>},
+                             {<<"opaque">>, <<"5ccc069c403ebaf9f0171e9517f40e41">>},
+                             {<<"qop">>, <<"auth">>},
+                             {<<"realm">>, <<"testrealm@host.com">>},
+                             {<<"response">>, <<"6629fae49393a05397450978507c4ef1">>},
+                             {<<"uri">>, <<"/dir/index.html">>},
+                             {<<"username">>, <<"Mufasa">>} ],
+                           lists:sort(Ans))
+      end,
+      ?_assertEqual({error, badarg}, parse(<<"nc=xyz">>)),
+      ?_assertEqual({error, badarg}, parse(<<"nc=DEADBEEF2">>)),
+      ?_assertEqual({ok, [{<<"nc">>, <<"DEADBEEF">>}]}, parse(<<"nc=DEADBEEF">>))
     ].
 
 -endif.
