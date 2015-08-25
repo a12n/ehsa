@@ -61,7 +61,7 @@ format(Key, Value) ->
 -spec parse(binary()) -> [{atom(), binary()}].
 
 parse(Str) ->
-    {ok, Params} = ehsa_params_parser2:parse(Str),
+    {ok, Params} = ehsa_params_parser:parse(Str),
     %% Convert known parameter keys to atoms, ignore unknown parameters.
     lists:foldl(
       fun({Key, Value}, Ans)
