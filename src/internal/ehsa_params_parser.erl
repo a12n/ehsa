@@ -1,5 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@bestmx.ru>
+%%% @private
 %%% @doc
 %%% Authentication information parameters parsing.
 %%% @end
