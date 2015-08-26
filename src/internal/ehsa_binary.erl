@@ -1,5 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Anton Yabchinskiy <arn@bestmx.ru>
+%%% @private
 %%% @doc
 %%% Utilities for binary strings.
 %%% @end
