@@ -8,7 +8,7 @@
 -module(ehsa).
 
 %% Types
--export_type([credentials/0, options/0, password_fun/0]).
+-export_type([options/0, password/0, password_fun/0, username/0]).
 
 %%%===================================================================
 %%% Types
@@ -17,8 +17,6 @@
 -type username() :: binary().
 
 -type password() :: {digest, _Digest :: binary()} | binary().
-
--type credentials() :: {username(), password()}.
 
 -type options() :: [{_Key :: atom(), _Val :: term()}].
 
