@@ -102,6 +102,44 @@ unauthorized(Options) ->
 %% @doc
 %% @end
 %%--------------------------------------------------------------------
+-spec verify_credentials(binary(), binary(),
+                         ehsa:password_fun() | ehsa:check_password_fun(),
+                         ehsa:options()) ->
+                                {true, any()} | {false, iodata()}.
+
+%% PwdFun returns password for a username
+verify_credentials(Username, Password, PwdFun, Options)
+  when is_function(PwdFun, 1) ->
+    case PwdFun(Username) of
+        {{digest, Digest}, Opaque} ->
+            Realm = proplists:get_value(realm, Options, <<>>),
+            case ehsa_digest:ha1(Username, Realm, Password) of
+                Digest ->
+                    {true, Opaque};
+                _Other ->
+                    unauthorized(Options)
+            end;
+        {Password, Opaque} ->
+            {true, Opaque};
+        _Other ->
+            unauthorized(Options)
+    end;
+
+%% PwdFun checks password's valid for a username
+verify_credentials(Username, Password, PwdFun, Options)
+  when is_function(PwdFun, 2) ->
+    case PwdFun(Username, Password) of
+        {true, Opaque} ->
+            {true, Opaque};
+        false ->
+            unauthorized(Options)
+    end.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
 -spec verify_info(binary(),
                   ehsa:password_fun(),
                   ehsa:options()) ->
