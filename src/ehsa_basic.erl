@@ -32,12 +32,19 @@ verify_auth(ReqHeader, PwdFun) ->
 %% `ReqHeader' is value of "Authorization" header from client (it may
 %% be `undefined').
 %%
-%% `PwdFun' is a function which, for a given user name, must return
-%% `undefined' if there is no such user, or `{Password, Opaque}'. The
-%% `Password' is either cleartext password as binary string, or
-%% `{digest, Digest}', where `Digest' is computed as
+%% `PwdFun' is either a `ehsa:password_fun()' or
+%% `ehsa:check_password_fun()'.
+%%
+%% `ehsa:password_fun()' is a function which, for a given user name,
+%% must return `undefined' if there is no such user, or `{Password,
+%% Opaque}'. The `Password' is either cleartext password as binary
+%% string, or `{digest, Digest}', where `Digest' is computed as
 %% `ehsa_digest:ha1(Username, Realm, ClearPassword)'. It's hex-encoded
 %% lower case binary string.
+%%
+%% `ehsa:check_password_fun()' is a function which performs password
+%% validation by itself, and must return either `{true, Opaque}' if
+%% the password is valid, or `false'.
 %%
 %% Usually `PwdFun' performs some useful work (e.g., does a database
 %% query). It should return the result in `Opaque' term, which will be
