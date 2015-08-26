@@ -162,6 +162,14 @@ password(<<"guest">>) -> {<<>>, 2};
 password(<<"xyzzy">>) -> {<<"1,.:235asd\/">>, 3};
 password(_Other) -> undefined.
 
+check_password(Username, Password) ->
+    case password(Username) of
+        {Password, Opaque} ->
+            {true, Opaque};
+        _Other ->
+            false
+    end.
+
 verify_auth_2_test_() ->
     [ ?_assertError(_, verify_auth(<<"Basic ", (base64:encode("xyz"))/bytes>>, fun password/1)),
       fun() ->
@@ -174,6 +182,14 @@ verify_auth_2_test_() ->
                   verify_auth(<<"Basic ", (base64:encode(<<"root:toor">>))/bytes>>, fun password/1),
               ?assertEqual(<<"Basic realm=\"\"">>, iolist_to_binary(ResHeader))
       end,
+      ?_assertMatch(
+         {true, 2},
+         verify_auth(<<"Basic ", (base64:encode(<<"guest:">>))/bytes>>, fun check_password/2)
+        ),
+      ?_assertMatch(
+         {false, _ResHeader},
+         verify_auth(<<"Basic ", (base64:encode(<<"guest:123">>))/bytes>>, fun check_password/2)
+        ),
       ?_assertMatch(
          {true, 2},
          verify_auth(<<"BaSiC ", (base64:encode(<<"guest:">>))/bytes>>, fun password/1)
