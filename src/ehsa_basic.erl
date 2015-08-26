@@ -19,7 +19,7 @@
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
-                  ehsa:password_fun()) ->
+                  ehsa:password_fun() | ehsa:check_password_fun()) ->
                          {true, any()} | {false, iodata()}.
 
 verify_auth(ReqHeader, PwdFun) ->
@@ -58,7 +58,7 @@ verify_auth(ReqHeader, PwdFun) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_auth(iodata() | undefined,
-                  ehsa:password_fun(),
+                  ehsa:password_fun() | ehsa:check_password_fun(),
                   ehsa:options()) ->
                          {true, any()} | {false, iodata()}.
 
@@ -141,26 +141,13 @@ verify_credentials(Username, Password, PwdFun, Options)
 %% @end
 %%--------------------------------------------------------------------
 -spec verify_info(binary(),
-                  ehsa:password_fun(),
+                  ehsa:password_fun() | ehsa:check_password_fun(),
                   ehsa:options()) ->
                          {true, any()} | {false, iodata()}.
 
 verify_info(ReqInfo, PwdFun, Options) ->
     [Username, Password] = binary:split(base64:decode(ReqInfo), <<$:>>),
-    case PwdFun(Username) of
-        {{digest, Digest}, Opaque} ->
-            Realm = proplists:get_value(realm, Options, <<>>),
-            case ehsa_digest:ha1(Username, Realm, Password) of
-                Digest ->
-                    {true, Opaque};
-                _Other ->
-                    unauthorized(Options)
-            end;
-        {Password, Opaque} ->
-            {true, Opaque};
-        _Other ->
-            unauthorized(Options)
-    end.
+    verify_credentials(Username, Password, PwdFun, Options).
 
 %%%===================================================================
 %%% Tests
