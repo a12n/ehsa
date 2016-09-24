@@ -19,6 +19,7 @@ shell: $(REBAR)
 
 test: $(REBAR)
 	$(REBAR) eunit
+	$(REBAR) cover
 
 rebar:
 	wget "https://github.com/erlang/rebar3/releases/download/3.3.1/rebar3" -O $@
