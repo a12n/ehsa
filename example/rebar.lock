@@ -1,26 +1,16 @@
 {"1.1.0",
 [{<<"cowboy">>,{pkg,<<"cowboy">>,<<"1.0.4">>},0},
  {<<"cowlib">>,{pkg,<<"cowlib">>,<<"1.0.2">>},1},
- {<<"ibrowse">>,
-  {git,"git://github.com/cmullaparthi/ibrowse.git",
-       {ref,"9b8b042fb7d37b90994ef6b6615c92dd2769328e"}},
-  1},
- {<<"meck">>,
-  {git,"git://github.com/basho/meck.git",
-       {ref,"dde759050eff19a1a80fd854d7375174b191665d"}},
-  1},
- {<<"mochiweb">>,
-  {git,"git://github.com/basho/mochiweb.git",
-       {ref,"332da857d91e681184a523a0d886a631b5385d7b"}},
-  1},
+ {<<"mochiweb">>,{pkg,<<"mochiweb">>,<<"2.12.2">>},1},
  {<<"ranch">>,{pkg,<<"ranch">>,<<"1.2.1">>},1},
  {<<"webmachine">>,
-  {git,"git://github.com/basho/webmachine",
-       {ref,"50c790ddc6087a133d326d7888ac596997d555ff"}},
+  {git,"git://github.com/webmachine/webmachine",
+       {ref,"5e1ff9213a2a3638eb12be9c84279840d0803414"}},
   0}]}.
 [
 {pkg_hash,[
  {<<"cowboy">>, <<"A324A8DF9F2316C833A470D918AAF73AE894278B8AA6226CE7A9BF699388F878">>},
  {<<"cowlib">>, <<"9D769A1D062C9C3AC753096F868CA121E2730B9A377DE23DEC0F7E08B1DF84EE">>},
+ {<<"mochiweb">>, <<"80804AD342AFA3D7F3524040D4EED66CE74B17A555DE454AC85B07C479928E46">>},
  {<<"ranch">>, <<"A6FB992C10F2187B46FFD17CE398DDF8A54F691B81768F9EF5F461EA7E28C762">>}]}
 ].
