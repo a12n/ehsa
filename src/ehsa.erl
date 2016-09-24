@@ -20,5 +20,5 @@
 
 -type options() :: [{_Key :: atom(), _Val :: term()}].
 
--type password_fun() :: fun((_Username :: binary()) ->
+-type password_fun() :: fun((username()) ->
                                    {password(), _Opaque :: any()} | undefined).
