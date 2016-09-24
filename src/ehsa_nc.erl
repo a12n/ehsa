@@ -78,7 +78,8 @@ start_link(Options) ->
 -spec create() -> binary().
 
 create() ->
-    Nonce = ehsa_binary:encode(crypto:rand_bytes(16)),
+    %% XXX: handle low_entropy error?
+    Nonce = ehsa_binary:encode(crypto:strong_rand_bytes(16)),
     ok = gen_server:call(?MODULE, {insert, Nonce}),
     Nonce.
 
