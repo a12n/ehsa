@@ -1,5 +1,3 @@
-.rebar/
-^.eunit/
-^rebar$
-deps/
-ebin/
+^rebar3$
+_build/
+doc/
