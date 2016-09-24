@@ -1,7 +1,6 @@
 .PHONY: all clean distclean doc shell test
 
-ERL ?= erl
-REBAR ?= ./rebar
+REBAR ?= ./rebar3
 
 all: $(REBAR)
 	$(REBAR) compile
@@ -10,18 +9,17 @@ clean: $(REBAR)
 	$(REBAR) clean
 
 distclean: clean
-	rm -f doc/*.css doc/*.html doc/*.png doc/edoc-info
-	rm -rf .eunit
+	rm -rf _build/ doc/
 
 doc: $(REBAR)
-	$(REBAR) doc
+	$(REBAR) edoc
 
-rebar:
-	wget "https://github.com/rebar/rebar/releases/download/2.5.1/rebar" -O $@
-	chmod +x $@
-
-shell:
-	$(ERL) -smp -pa ebin/
+shell: $(REBAR)
+	$(REBAR) shell
 
 test: $(REBAR)
 	$(REBAR) eunit
+
+rebar:
+	wget "https://github.com/erlang/rebar3/releases/download/3.3.1/rebar3" -O $@
+	chmod +x $@

@@ -1,7 +1,6 @@
 .PHONY: all app clean shell test
 
-ERL ?= erl
-REBAR ?= ../rebar
+REBAR ?= ../rebar3
 
 all:
 	$(REBAR) compile
@@ -10,4 +9,4 @@ clean:
 	$(REBAR) clean
 
 start:
-	$(ERL) -smp -pa ebin/ -pa ../ebin/ -pa deps/*/ebin/ -s example
+	$(REBAR) shell --apps example
