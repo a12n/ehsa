@@ -1,4 +1,4 @@
-.PHONY: all app clean shell test
+.PHONY: all app clean start
 
 REBAR ?= ../rebar3
 
