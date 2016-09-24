@@ -9,7 +9,7 @@ clean: $(REBAR)
 	$(REBAR) clean
 
 distclean: clean
-	rm -rf _build/ doc/
+	rm -rf _build/ doc/ rebar3
 
 doc: $(REBAR)
 	$(REBAR) edoc
