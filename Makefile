@@ -21,6 +21,6 @@ test: $(REBAR)
 	$(REBAR) eunit
 	$(REBAR) cover
 
-rebar:
+rebar3:
 	wget "https://github.com/erlang/rebar3/releases/download/3.3.1/rebar3" -O $@
 	chmod +x $@
